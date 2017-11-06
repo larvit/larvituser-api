@@ -1,0 +1,48 @@
+{
+	"name": "larvituser-api",
+	"version": "0.0.1",
+	"description": "REST api built on top of larvituser",
+	"author": {
+		"name": "Klas Espenkrona",
+		"email": "klas@larvit.se",
+		"url": "http://larvit.se"
+	},
+	"private": false,
+	"dependencies": {
+		"async": "^2.5.0",
+		"larvitdb": "^1.3.1",
+		"larvitbase": "^1.1.15",
+		"larvitamintercom": "^0.2.5",
+		"larvitutils": "^1.1.1",
+		"larvituser": "^0.12.3",
+		"winston": "^2.3.1",
+		"winston-daily-rotate-file": "^1.3.1"
+	},
+	"devDependencies": {
+		"mocha": "^4.0.1",
+		"mocha-eslint": "^4.1.0"
+	},
+	"keywords": [
+		"user"
+	],
+	"main": "index.js",
+	"repository": {
+		"url": "https://github.com/larvit/larvituser-api",
+		"type": "git"
+	},
+	"readmeFilename": "README.md",
+	"bugs": {
+		"url": "https://github.com/larvit/larvituser-api/issues"
+	},
+	"homepage": "https://github.com/larvit/larvituser-api",
+	"scripts": {
+		"test": "mocha"
+	},
+	"license": "MIT",
+	"maintainers": [
+		{
+			"name": "klas",
+			"email": "klas@larvit.se"
+		}
+	]
+}
