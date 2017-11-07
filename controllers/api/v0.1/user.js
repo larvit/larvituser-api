@@ -20,6 +20,8 @@ exports.run = function (req, res, cb) {
 				return cb();
 			}
 
+			log.debug(logPrefix + 'Looking for user with uuid "' + req.urlParsed.query.uuid + '"');
+
 			userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
 				if (err  && err.message === 'Invalid userUuid') {
 					utils.createErrorResponse(res, 400, 'Invalid uuid');
@@ -45,6 +47,8 @@ exports.run = function (req, res, cb) {
 					responseSent = true;
 					return cb();
 				}
+
+				log.debug(logPrefix + 'Trying to create new user with data "' + JSON.stringify(result) + '"');
 
 				data = result;
 				cb();
@@ -106,6 +110,7 @@ exports.run = function (req, res, cb) {
 					return cb();
 				}
 
+				log.debug(logPrefix + 'Trying to update user with data "' + JSON.stringify(result) + '"');
 				data = result;
 				cb();
 			});
