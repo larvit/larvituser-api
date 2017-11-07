@@ -3,7 +3,8 @@
 const logPrefix = 'larvituser-api ./controllers/api/v0.1/user.js - ',
 	userLib	= require('larvituser'),
 	utils	= require(__dirname + '/../../../utils.js'),
-	async	= require('async');
+	async	= require('async'),
+	log	= require('winston');
 
 exports.run = function (req, res, cb) {
 	const	tasks = [];
