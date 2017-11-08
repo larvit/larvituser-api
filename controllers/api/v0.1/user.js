@@ -37,7 +37,7 @@ exports.run = function (req, res, cb) {
 			});
 		});
 	// create user
-	} else if (req.method.toUpperCase() === 'PUT') {
+	} else if (req.method.toUpperCase() === 'POST') {
 		let data;
 
 		// parse request body
@@ -98,7 +98,7 @@ exports.run = function (req, res, cb) {
 			});
 		});
 	// update user
-	} else if (req.method.toUpperCase() === 'PATCH') {
+	} else if (req.method.toUpperCase() === 'PUT') {
 		let data,
 			user;
 
