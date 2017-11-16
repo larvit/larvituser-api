@@ -2,7 +2,7 @@
 
 const logPrefix = 'larvituser-api ./controllers/api/v0.1/user.js - ',
 	userLib	= require('larvituser'),
-	utils	= require(__dirname + '/../../../utils.js'),
+	utils	= require(__dirname + '/../../utils.js'),
 	async	= require('async'),
 	log	= require('winston');
 
