@@ -13,7 +13,8 @@ let options,
 process.chdir(__dirname);
 
 options = {
-	'server': fs.existsSync(__dirname + '/config/server.json') ? require(__dirname + '/config/server.json') : JSON.parse(fs.readFileSync(__dirname + '/config/server.json_example', 'utf8')),
+	'amsync':	fs.existsSync(__dirname + '/config/amsync.json') ? require(__dirname + '/config/amsync.json') : JSON.parse(fs.readFileSync(__dirname + '/config/amsync.json_example', 'utf8')),
+	'server':	fs.existsSync(__dirname + '/config/server.json') ? require(__dirname + '/config/server.json') : JSON.parse(fs.readFileSync(__dirname + '/config/server.json_example', 'utf8')),
 	'amqp':	fs.existsSync(__dirname + '/config/amqp.json') ? require(__dirname + '/config/amqp.json') : JSON.parse(fs.readFileSync(__dirname + '/config/amqp.json_example', 'utf8')),
 	'log':	fs.existsSync(__dirname + '/config/log.json') ? require(__dirname + '/config/log.json') : JSON.parse(fs.readFileSync(__dirname + '/config/log.json_example', 'utf8')),
 	'db':	fs.existsSync(__dirname + '/config/db.json') ? require(__dirname + '/config/db.json') : JSON.parse(fs.readFileSync(__dirname + '/config/db.json_example', 'utf8'))
@@ -49,6 +50,10 @@ db.setup(options.db);
 options.server.beforeware = [];
 options.server.middleware = [];
 options.server.afterware = [];
+
+userLib.options = {
+	'amsync': options.amsync
+};
 
 // Load routes
 //options.server.customRoutes = require('../config/routes.json');
