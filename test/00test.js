@@ -3,7 +3,7 @@
 const	request	= require('request'),
 	assert	= require('assert'),
 	async	= require('async'),
-	Api	= require(__dirname + '/../Api.js'),
+	Api	= require(__dirname + '/../index.js'),
 	log	= require('winston'),
 	db	= require('larvitdb'),
 	fs	= require('fs');
@@ -90,7 +90,7 @@ describe('api test', function () {
 		request('http://localhost:' + api.options.server.port, function (err, response, body) {
 			if (err) throw err;
 			assert.strictEqual(response.statusCode, 200);
-			assert.strictEqual(body.indexOf('<h1>Welcome to larvituser-api</h1>') !== - 1, true);
+			assert.strictEqual(body.indexOf('larvituser-api') !== - 1, true);
 			done();
 		});
 	});
