@@ -25,7 +25,7 @@
 	"keywords": [
 		"user"
 	],
-	"main": "Api.js",
+	"main": "index.js",
 	"repository": {
 		"url": "https://github.com/larvit/larvituser-api",
 		"type": "git"

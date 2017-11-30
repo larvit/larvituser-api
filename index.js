@@ -1,66 +1,51 @@
 'use strict';
 
-const logPrefix	= 'larvituser-api ./index.js - ',
+const logPrefix	= 'larvituser-api ./Api.js - ',
 	Intercom	= require('larvitamintercom'),
 	userLib	= require('larvituser'),
 	log	= require('winston'),
-	db	= require('larvitdb'),
-	fs	= require('fs');
+	db	= require('larvitdb');
 
-let options,
-	intercom;
+function Api(options) {
+	this.options = options;
 
-process.chdir(__dirname);
-
-options = {
-	'amsync':	fs.existsSync(__dirname + '/config/amsync.json') ? require(__dirname + '/config/amsync.json') : JSON.parse(fs.readFileSync(__dirname + '/config/amsync.json_example', 'utf8')),
-	'server':	fs.existsSync(__dirname + '/config/server.json') ? require(__dirname + '/config/server.json') : JSON.parse(fs.readFileSync(__dirname + '/config/server.json_example', 'utf8')),
-	'amqp':	fs.existsSync(__dirname + '/config/amqp.json') ? require(__dirname + '/config/amqp.json') : JSON.parse(fs.readFileSync(__dirname + '/config/amqp.json_example', 'utf8')),
-	'log':	fs.existsSync(__dirname + '/config/log.json') ? require(__dirname + '/config/log.json') : JSON.parse(fs.readFileSync(__dirname + '/config/log.json_example', 'utf8')),
-	'db':	fs.existsSync(__dirname + '/config/db.json') ? require(__dirname + '/config/db.json') : JSON.parse(fs.readFileSync(__dirname + '/config/db.json_example', 'utf8'))
-};
-
-// Add support for daily rotate file
-log.transports.DailyRotateFile = require('winston-daily-rotate-file');
-
-// Handle logging from config file
-log.remove(log.transports.Console);
-if (options.log !== undefined) {
-	for (const logName of Object.keys(options.log)) {
-		if (typeof options.log[logName] !== Array) {
-			options.log[logName] = [options.log[logName]];
-		}
-
-		for (let i = 0; options.log[logName][i] !== undefined; i ++) {
-			log.add(log.transports[logName], options.log[logName][i]);
-		}
-	}
+	if ( ! this.options) this.options = {};
+	if ( ! this.options.server) this.options.server = {};
+	if ( ! this.options.server.beforeware) this.options.server.beforeware = [];
+	if ( ! this.options.server.middleware) this.options.server.middleware = [];
+	if ( ! this.options.server.afterware) this.options.server.afterware = [];
 }
 
-log.info(logPrefix + '===--- Larvituser-api starting ---===');
+Api.prototype.start = function (cb) {
+	const that = this;
 
-userLib.dataWriter.mode	= options.server.mode;
+	if ( ! cb) cb = function () {};
 
-// Intercom
-intercom = new Intercom(options.amqp.default);
-userLib.dataWriter.intercom	= intercom;
+	if ( ! that.options.db) {
+		const e = new Error('Db configuration not present');
+		log.warn(logPrefix + e.message);
+		return cb(e);
+	}
 
-db.setup(options.db);
+	if ( ! that.options.server.port) {
+		const e = new Error('Server port must be set');
+		log.warn(logPrefix + e.message);
+		return cb(e);
+	}
 
-options.server.beforeware = [];
-options.server.middleware = [];
-options.server.afterware = [];
+	userLib.dataWriter.intercom	= that.options.intercom ? new Intercom(that.options.amqp) : undefined;
 
-userLib.options = {
-	'amsync': options.amsync
+	db.setup(that.options.db);
+
+	log.info(logPrefix + '===--- Larvituser-api starting ---===');
+
+	userLib.ready(function (err) {
+		if (err) throw err;
+		require('larvitbase')(that.options.server).on('serverListening', function () {
+			log.info(logPrefix + 'Api is up and running!');
+			cb();
+		});
+	});;
 };
 
-// Load routes
-//options.server.customRoutes = require('../config/routes.json');
-
-userLib.ready(function (err) {
-	if (err) throw err;
-	require('larvitbase')(options.server).on('serverListening', function () {
-		log.info(logPrefix + 'Api is up and running!');
-	});
-});;
+exports = module.exports = Api;
