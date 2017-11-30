@@ -11,6 +11,7 @@ function Api(options) {
 
 	if ( ! this.options) this.options = {};
 	if ( ! this.options.server) this.options.server = {};
+	if ( ! this.options.server.customRoutes) this.options.server.customRoutes = [];
 	if ( ! this.options.server.beforeware) this.options.server.beforeware = [];
 	if ( ! this.options.server.middleware) this.options.server.middleware = [];
 	if ( ! this.options.server.afterware) this.options.server.afterware = [];
