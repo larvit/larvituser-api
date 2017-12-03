@@ -53,9 +53,44 @@ Fetch a specific user, identified by uuid
 
 Create a new user
 
+#### Body
+
+```json
+{
+	"username":	"foo",
+	"password":	"bar" or false,
+	"fields": {
+		"firstname":	"Ove",
+		"lastname":	["Arvidsson", "Stollesson"]
+	}
+}
+```
+
+Some considerations:
+
+* Username must be non-empty and unique
+* If password is false, fetching user by username and password bill be disabled
+
 ### PUT /user?uuid=xxx
 
 Create or update a specific user, defined by uuid
+
+```json
+{
+	"username":	"foo",
+	"password":	"bar" or false,
+	"fields": {
+		"firstname":	"Ove",
+		"lastname":	["Arvidsson", "Stollesson"]
+	}
+}
+```
+
+Some considerations:
+
+* username, password and fields are all optional if the user already exists.
+* If fields are present, only the named fields will be replaced. For example: if The above is saved, another update with {"fields": {"lastname": "Stark"}} would end in the saved fields as: {"fields": {"firstname": "Ove", "lastname": "Stark"}}
+* password: false is NOT the same as password: undefined!
 
 ### GET /users
 
