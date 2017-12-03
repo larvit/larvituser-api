@@ -92,6 +92,10 @@ Some considerations:
 * If fields are present, only the named fields will be replaced. For example: if The above is saved, another update with {"fields": {"lastname": "Stark"}} would end in the saved fields as: {"fields": {"firstname": "Ove", "lastname": "Stark"}}
 * password: false is NOT the same as password: undefined!
 
+### DELETE /user?uuid=xxx
+
+Remove a user from the database
+
 ### GET /users
 
 Fetch a list of users
