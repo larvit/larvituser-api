@@ -1,11 +1,6 @@
 'use strict';
 
-<<<<<<< HEAD
-const logPrefix	= 'larvituser-api ./index.js - ',
-	Intercom	= require('larvitamintercom'),
-=======
 const	topLogPrefix	= 'larvituser-api ./index.js - ',
->>>>>>> f2315be9d4072a6ecacc02f682aa89c919253f1c
 	userLib	= require('larvituser'),
 	log	= require('winston');
 
