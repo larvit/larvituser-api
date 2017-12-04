@@ -1,42 +1,45 @@
 'use strict';
 
+<<<<<<< HEAD
 const logPrefix	= 'larvituser-api ./index.js - ',
 	Intercom	= require('larvitamintercom'),
+=======
+const	topLogPrefix	= 'larvituser-api ./index.js - ',
+>>>>>>> f2315be9d4072a6ecacc02f682aa89c919253f1c
 	userLib	= require('larvituser'),
-	log	= require('winston'),
-	db	= require('larvitdb');
+	log	= require('winston');
 
 function Api(options) {
-	this.options = options;
+	this.options	= options;
 
-	if ( ! this.options) this.options = {};
-	if ( ! this.options.server) this.options.server = {};
-	if ( ! this.options.server.customRoutes) this.options.server.customRoutes = [];
-	if ( ! this.options.server.beforeware) this.options.server.beforeware = [];
-	if ( ! this.options.server.middleware) this.options.server.middleware = [];
-	if ( ! this.options.server.afterware) this.options.server.afterware = [];
+	if ( ! this.options)	this.options	= {};
+	if ( ! this.options.server)	this.options.server	= {};
+	if ( ! this.options.server.customRoutes)	this.options.server.customRoutes	= [];
+	if ( ! this.options.server.beforeware)	this.options.server.beforeware	= [];
+	if ( ! this.options.server.middleware)	this.options.server.middleware	= [];
+	if ( ! this.options.server.afterware)	this.options.server.afterware	= [];
 }
 
 Api.prototype.start = function (cb) {
-	const that = this;
+	const	logPrefix	= topLogPrefix + 'Api.prototype.start() - ',
+		that	= this;
 
 	if ( ! cb) cb = function () {};
 
 	if ( ! that.options.db) {
-		const e = new Error('Db configuration not present');
-		log.warn(logPrefix + e.message);
-		return cb(e);
+		const	err	= new Error('Db instance present');
+		log.warn(logPrefix + err.message);
+		return cb(err);
 	}
 
 	if ( ! that.options.server.port) {
-		const e = new Error('Server port must be set');
-		log.warn(logPrefix + e.message);
-		return cb(e);
+		const	err	= new Error('Server port must be set');
+		log.warn(logPrefix + err.message);
+		return cb(err);
 	}
 
-	userLib.dataWriter.intercom	= that.options.intercom ? new Intercom(that.options.amqp) : undefined;
-
-	db.setup(that.options.db);
+	userLib.dataWriter.intercom	= that.options.intercom;
+	userLib.dataWriter.mode	= that.options.mode;
 
 	log.info(logPrefix + '===--- Larvituser-api starting ---===');
 
