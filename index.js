@@ -2,7 +2,9 @@
 
 const	topLogPrefix	= 'larvituser-api ./index.js - ',
 	userLib	= require('larvituser'),
-	log	= require('winston');
+	Intercom	= require('larvitamintercom'),
+	log	= require('winston'),
+	db	= require('larvitdb');
 
 function Api(options) {
 	this.options	= options;
@@ -33,8 +35,13 @@ Api.prototype.start = function (cb) {
 		return cb(err);
 	}
 
-	userLib.dataWriter.intercom	= that.options.intercom;
-	userLib.dataWriter.mode	= that.options.mode;
+	db.setup(that.options.db);
+
+	userLib.dataWriter.intercom	= new Intercom(that.options.amqp.default || 'loopback interface');
+	userLib.dataWriter.mode	= that.options.server.mode;
+	userLib.options = {
+		'amsync': that.options.amsync
+	};
 
 	log.info(logPrefix + '===--- Larvituser-api starting ---===');
 
