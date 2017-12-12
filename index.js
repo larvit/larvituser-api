@@ -39,7 +39,7 @@ Api.prototype.start = function (cb) {
 
 	userLib.dataWriter.intercom	= new Intercom(that.options.amqp.default || 'loopback interface');
 	userLib.dataWriter.mode	= that.options.server.mode;
-	userLib.options = {
+	userLib.dataWriter.options = {
 		'amsync': that.options.amsync
 	};
 
