@@ -49,11 +49,24 @@ node index.js
 
 Fetch a specific user, identified by uuid
 
+#### Response example
+
+```json
+{
+	"uuid": "uuid string",
+	"username": "string",
+	"fields": {
+		"fieldName1": ["field value 1", "field value 2"],
+		"some other field": ["other fields value"]
+	}
+}
+```
+
 ### POST /user
 
 Create a new user
 
-#### Body
+#### Request body example
 
 ```json
 {
@@ -71,39 +84,156 @@ Some considerations:
 * Username must be non-empty and unique
 * If password is false, fetching user by username and password bill be disabled
 
+#### Response example
+
+```json
+{
+	"uuid": "uuid string",
+	"username": "foo",
+	"fields": {
+		"firstname": ["Ove"],
+		"lastname": ["Arvidsson", "Stollesson"]
+	}
+}
+```
+
 ### PUT /user?uuid=xxx
 
-Create or update a specific user, defined by uuid
+Create or update a specific user, defined by uuid.
+
+Some considerations:
+
+* uuid URL parameter is optional. If left out a new user will be created.
+* username, password and fields are all optional if the user already exists. If user does not exist, username is required.
+* if fields is provided, it will completely replace all previous fields (if this is not desired, use PATCH instead)
+* password: false is NOT the same as password: undefined! A false password will disable logins. undefined password will leave it as is (default is false for newly created users)
+
+#### Request body example
 
 ```json
 {
 	"username":	"foo",
 	"password":	"bar" or false,
 	"fields": {
-		"firstname":	"Ove",
-		"lastname":	["Arvidsson", "Stollesson"]
+		"name":	"Bosse",
+		"lastname":	"Bengtsson"
 	}
 }
 ```
 
-Some considerations:
+#### Response body example
 
-* username, password and fields are all optional if the user already exists.
-* If fields are present, only the named fields will be replaced. For example: if The above is saved, another update with {"fields": {"lastname": "Stark"}} would end in the saved fields as: {"fields": {"firstname": "Ove", "lastname": "Stark"}}
-* password: false is NOT the same as password: undefined!
+```json
+{
+	"uuid": "uuid string",
+	"username": "foo",
+	"fields": {
+		"name": ["Bosse"],
+		"lastname": ["Bengtsson"]
+	}
+}
+```
 
 ### PATCH /user?uuid=xxx
 
+Modify an existing user
 
+Some considerations:
+
+* uuid URL parameter **must** be provided.
+* username, password and fields are all optional
+* If fields are present, only the named fields will be replaced. For example: if The above is saved, another update with {"fields": {"lastname": "Stark"}} would end in the saved fields as: {"fields": {"firstname": "Ove", "lastname": "Stark"}}
+* password: false is NOT the same as password: undefined! A false password will disable logins. undefined password will leave it as is (default is false for newly created users)
+
+#### Request body example
+
+```json
+{
+	"username":	"foo",
+	"password":	"bar" or false,
+	"fields": {
+		"name":	"Bosse",
+		"lastname":	"Bengtsson"
+	}
+}
+```
+
+#### Response body example
+
+```json
+{
+	"uuid": "uuid string",
+	"username": "foo",
+	"fields": {
+		"name": ["Bosse"],
+		"lastname": ["Bengtsson"]
+	}
+}
+```
 
 ### DELETE /user?uuid=xxx
 
 Remove a user from the database
 
+No request body should be sent
+
+#### Response body example
+
+```json
+"acknowledged"
+```
+
 ### DELETE /user/field?userUuid=xxx&fieldName=yyy
 
 Remove a user field from database for a specific user
 
+No request body should be sent
+
+#### Response body example
+
+```json
+"acknowledged"
+```
+
 ### GET /users
 
-Fetch a list of users
+Fetch a list of users.
+
+#### Request body example
+
+This is all optional, will only fetch users that matches **all** criterias.
+
+```json
+{
+	"q":	"search the database, matching username, field values and/or exact match of uuid",
+	"limit":	"integer - how many results to retrieve, defaults to 100",
+	"offset":	"integer - how many initial results to skip",
+	"uuids":	["uuid1", "uuid", "etc"],
+	"returnFields":	["field1", "field2"] // Will return the values for the fields listed. By default no fields are returned (since return fields is expensive)
+}
+```
+
+#### Response body example
+
+```json
+{
+	"totalHits":	392,
+	"hits": [
+		{
+			"uuid":	"uuid string",
+			"username":	"bosse",
+			"fields": {
+				"field1":	["field value 1"]
+			}
+		},
+		{
+			"uuid":	"uuid string",
+			"username":	"bengan",
+			"fields": {
+				"field1": ["foo"],
+				"field": ["bar"]
+			}
+		}
+	]
+}
+```

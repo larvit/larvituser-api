@@ -1,6 +1,6 @@
 'use strict';
 
-const topLogPrefix = 'larvituser-api ./utils.js - ',
+const	topLogPrefix	= 'larvituser-api ./utils.js - ',
 	responseMessage	= {
 		'400':	'Bad request',
 		'405':	'Method not allowed',
