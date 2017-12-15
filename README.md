@@ -45,11 +45,20 @@ node index.js
 
 ## REST API Endpoints
 
-### GET /user?uuid=xxx
+### GET /user
 
-Fetch a specific user, identified by uuid
+Fetch a specific user
 
-#### Response example
+#### Request URL parameters
+
+One, and exactly one of the following is allowed:
+
+* uuid: "uuid string"
+* username: "string"
+
+#### Response example on success
+
+200 OK
 
 ```json
 {
@@ -62,42 +71,51 @@ Fetch a specific user, identified by uuid
 }
 ```
 
-### POST /user
+#### Response body example on failure
 
-Create a new user
+404 Not Found
+
+```json
+"no matching user found"
+```
+
+### POST /user/login
+
+Obtain a user by username and password. **Do not use this if your connection is not secure!**
 
 #### Request body example
 
 ```json
 {
-	"username":	"foo",
-	"password":	"bar" or false,
-	"fields": {
-		"firstname":	"Ove",
-		"lastname":	["Arvidsson", "Stollesson"]
-	}
+	"username":	"string",
+	"password":	"string"
 }
 ```
 
-Some considerations:
+#### Response body example on success
 
-* Username must be non-empty and unique
-* If password is false, fetching user by username and password bill be disabled
-
-#### Response example
+200 OK
 
 ```json
 {
 	"uuid": "uuid string",
-	"username": "foo",
+	"username": "string",
 	"fields": {
-		"firstname": ["Ove"],
-		"lastname": ["Arvidsson", "Stollesson"]
+		"fieldName1": ["field value 1", "field value 2"],
+		"some other field": ["other fields value"]
 	}
 }
 ```
 
-### PUT /user?uuid=xxx
+#### Response body example on failure
+
+404 Not Found
+
+```json
+"no matching user found"
+```
+
+### PUT /user
 
 Create or update a specific user, defined by uuid.
 
@@ -112,6 +130,7 @@ Some considerations:
 
 ```json
 {
+	"uuid":	"uuid string", // If left out a new user will be created and a random uuid given to it
 	"username":	"foo",
 	"password":	"bar" or false,
 	"fields": {
@@ -122,6 +141,10 @@ Some considerations:
 ```
 
 #### Response body example
+
+201 Created
+or
+200 OK
 
 ```json
 {
@@ -134,13 +157,13 @@ Some considerations:
 }
 ```
 
-### PATCH /user?uuid=xxx
+### PATCH /user
 
 Modify an existing user
 
 Some considerations:
 
-* uuid URL parameter **must** be provided.
+* uuid **must** be provided.
 * username, password and fields are all optional
 * If fields are present, only the named fields will be replaced. For example: if The above is saved, another update with {"fields": {"lastname": "Stark"}} would end in the saved fields as: {"fields": {"firstname": "Ove", "lastname": "Stark"}}
 * password: false is NOT the same as password: undefined! A false password will disable logins. undefined password will leave it as is (default is false for newly created users)
@@ -149,6 +172,7 @@ Some considerations:
 
 ```json
 {
+	"uuid":	"uuid string",
 	"username":	"foo",
 	"password":	"bar" or false,
 	"fields": {
@@ -159,6 +183,8 @@ Some considerations:
 ```
 
 #### Response body example
+
+200 OK
 
 ```json
 {
@@ -171,25 +197,42 @@ Some considerations:
 }
 ```
 
-### DELETE /user?uuid=xxx
+### DELETE /user
 
 Remove a user from the database
 
-No request body should be sent
+#### Request body example
+
+```json
+{
+	"uuid":	"uuid string"
+}
+```
 
 #### Response body example
+
+200 OK
 
 ```json
 "acknowledged"
 ```
 
-### DELETE /user/field?userUuid=xxx&fieldName=yyy
+### DELETE /user/field
 
 Remove a user field from database for a specific user
 
-No request body should be sent
+#### Request body example
+
+```json
+{
+	"userUuid":	"uuid string",
+	"fieldName":	"string"
+}
+```
 
 #### Response body example
+
+200 OK
 
 ```json
 "acknowledged"
@@ -199,21 +242,19 @@ No request body should be sent
 
 Fetch a list of users.
 
-#### Request body example
+#### Request URL parameters
 
 This is all optional, will only fetch users that matches **all** criterias.
 
-```json
-{
-	"q":	"search the database, matching username, field values and/or exact match of uuid",
-	"limit":	"integer - how many results to retrieve, defaults to 100",
-	"offset":	"integer - how many initial results to skip",
-	"uuids":	["uuid1", "uuid", "etc"],
-	"returnFields":	["field1", "field2"] // Will return the values for the fields listed. By default no fields are returned (since return fields is expensive)
-}
-```
+* q:	"search the database, matching username, field values and/or exact match of uuid",
+* limit:	"integer - how many results to retrieve, defaults to 100",
+* offset:	"integer - how many initial results to skip",
+* uuids:	"comma separated list of uuids",
+* returnFields:	"comma separated list of field names. Will return the values for the fields listed. By default no fields are returned (since return fields is expensive)
 
 #### Response body example
+
+200 OK
 
 ```json
 {
