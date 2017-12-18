@@ -1,18 +1,22 @@
 'use strict';
 
-const	freeport	= require('freeport'),
+const	Intercom	= require('larvitamintercom'),
+	freeport	= require('freeport'),
 	request	= require('request'),
 	async	= require('async'),
 	test	= require('tape'),
-	App	= require(__dirname + '/../index.js');
+	Api	= require(__dirname + '/../index.js'),
+	db	= require('larvitdb');
+
+db.setup(require(__dirname + '/../config/db_test.json'));
 
 test('Basic request', function (t) {
 	const	tasks	= [];
 
 	let	port,
-		app;
+		api;
 
-	t.timeoutAfter(100);
+	t.timeoutAfter(5000);
 
 	// Get free port
 	tasks.push(function (cb) {
@@ -24,31 +28,21 @@ test('Basic request', function (t) {
 
 	// Start server
 	tasks.push(function (cb) {
-		app = new App({
-			'httpOptions':	port,
-			'middleware': [
-				function (req, res, cb) {
-					if (req.url === '/foo') {
-						return cb(new Error('deng'));
-					}
-					cb();
-				},
-				function (req, res, cb) {
-					res.end('Hello world');
-					cb();
-				}
-			]
-		}, cb);
-
-		app.on('error', function (err, req, res) {
-			res.statusCode = 500;
-			res.end('Internal server error: ' + err.message);
+		api = new Api({
+			'db':	db,
+			'intercom':	new Intercom('loopback interface'),
+			'mode':	'master',
+			'appOptions': {
+				'httpOptions':	port
+			}
 		});
+
+		api.start(cb);
 	});
 
 	// Try 200 request
 	tasks.push(function (cb) {
-		request('http://localhost:' + port + '/bar', function (err, response, body) {
+		request('http://localhost:' + port + '/', function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
 			t.equal(body,	'Hello world');
@@ -56,11 +50,11 @@ test('Basic request', function (t) {
 		});
 	});
 
-	// Try 500 request
+	// Try 404 request
 	tasks.push(function (cb) {
 		request('http://localhost:' + port + '/foo', function (err, response, body) {
 			if (err) return cb(err);
-			t.equal(response.statusCode,	500);
+			t.equal(response.statusCode,	404);
 			t.equal(body,	'Internal server error: deng');
 			cb();
 		});
@@ -68,20 +62,11 @@ test('Basic request', function (t) {
 
 	// Close server
 	tasks.push(function (cb) {
-		app.httpServer.close(cb);
+		api.app.httpServer.close(cb);
 	});
 
 	async.series(tasks, function (err) {
-		if (err) {
-			t.fail('err: ' + err.message);
-		}
-		t.end();
-	});
-});
-
-test('Starting witout middleware', function (t) {
-	new App({}, function (err) {
-		t.equal(err instanceof Error, true);
+		if (err) throw err;
 		t.end();
 	});
 });

@@ -7,7 +7,7 @@ const	topLogPrefix	= 'larvituser-api ./utils.js - ',
 		'500':	'Internal server error'
 	};
 
-function createErrorResponse(res, statusCode, reason) {
+function createErrorRes(res, statusCode, reason) {
 	const responseObj = {
 		'statusCose': statusCode,
 		'error': responseMessage[statusCode],
@@ -21,7 +21,7 @@ function createErrorResponse(res, statusCode, reason) {
 	res.end(JSON.stringify(responseObj));
 };
 
-function parseJsonRequest(req, cb) {
+function parseJsonReq(req, cb) {
 	let result = '';
 
 	req.on('data', function (data) {
@@ -41,5 +41,5 @@ function parseJsonRequest(req, cb) {
 	});
 }
 
-exports.createErrorResponse = createErrorResponse;
-exports.parseJsonRequest = parseJsonRequest;
+exports.createErrorRes	= createErrorRes;
+exports.parseJsonReq	= parseJsonReq;

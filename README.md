@@ -1,8 +1,9 @@
-[![Build Status](https://travis-ci.org/larvit/larvituser-api.svg?branch=master)](https://travis-ci.org/larvit/larvituser-api) [![Dependencies](https://david-dm.org/larvit/larvituser-api.svg)](https://david-dm.org/larvit/larvituser-api.svg)
+[![Build Status](https://travis-ci.org/larvit/larvituser-api.svg)](https://travis-ci.org/larvit/larvituser-api) [![Dependencies](https://david-dm.org/larvit/larvituser-api.svg)](https://david-dm.org/larvit/larvituser-api.svg)
+[![Coverage Status](https://coveralls.io/repos/larvit/larvituser-api/badge.svg)](https://coveralls.io/github/larvit/larvituser-api)
 
 # larvituser-api
 
-REST http API module wrapper around the user library [larvituser(https://github.com/larvit/larvituser)]
+REST http API module wrapper around the user library [larvituser](https://github.com/larvit/larvituser)
 
 ## Installation
 
@@ -24,9 +25,7 @@ db.setup({'db': 'options'});	// See https://github.com/larvit/larvitdb for detai
 
 userApi	= new UserApi({
 	'db':	require('larvitdb'),	// Must be a configured database instance
-	'server':	{	// Will be passed directly to larvitbase. For more info see: https://github.com/larvit/larvitbase
-		'port':	8080	// The only mandatory server option
-	},
+	'appOptions':	{},	// Will be passed directly to larvitbase. For more info see: https://github.com/larvit/larvitbase
 	'intercom':	undefined,	// Or instance of larvitamintercom. For more info see: https://github.com/larvit/larvitamintercom
 	'mode':	undefined,	// DataWriter mode, see larvituser for more info: https://github.com/larvit/larvituser
 });
