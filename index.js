@@ -6,9 +6,13 @@ const	topLogPrefix	= 'larvituser-api: ./index.js - ',
 	log	= require('winston');
 
 function UserApi(options) {
-	this.options	= options;
+	const that = this;
 
-	if ( ! this.options)	this.options	= {};
+	that.options	= options;
+
+	if ( ! that.options)	that.options	= {};
+
+	that.api	= new Api(that.options);
 };
 
 UserApi.prototype.start = function (cb) {
@@ -34,7 +38,6 @@ UserApi.prototype.start = function (cb) {
 	userLib.ready(function (err) {
 		if (err) return cb(err);
 
-		that.api = new Api(that.options);
 		that.api.start(cb);
 	});;
 };
