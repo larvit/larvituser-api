@@ -9,8 +9,7 @@ const	request	= require('request'),
 		'amqp': { 'default': 'loopback interface' },
 		'amsync':	{},
 		'log':	require(__dirname + '/../config/log_test.json'),
-		'db':	require(__dirname + '/../config/db_test.json'),
-		'server': { 'port': 9342, 'mode': 'master' }
+		'db':	require(__dirname + '/../config/db_test.json')
 	};
 
 db.setup(options.db);
@@ -37,7 +36,7 @@ test('Get a response from a controller', function (t) {
 
 	// Try 200 request for Readme.md
 	tasks.push(function (cb) {
-		request('http://localhost:' + options.server.port, function (err, response, body) {
+		request('http://localhost:' + userApi.api.lBase.httpServer.address().port, function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
 			t.equal(body.length,	5603);
@@ -47,10 +46,10 @@ test('Get a response from a controller', function (t) {
 
 	// Try 404 request
 	tasks.push(function (cb) {
-		request('http://localhost:' + options.server.port + '/foo', function (err, response, body) {
+		request('http://localhost:' + userApi.api.lBase.httpServer.address().port + '/foo', function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	404);
-			t.equal(body,	'Internal server error: deng');
+			t.equal(body,	'"URL endpoint not found"');
 			cb();
 		});
 	});
