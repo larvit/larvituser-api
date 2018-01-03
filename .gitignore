@@ -1,5 +1,10 @@
 config/amqp_test.json
 config/db_test.json
+config/amqp.json
+config/amsync.json
+config/db.json
+config/server.json
+config/server_test.json
 coverage
 node_modules
 npm-debug.log*
