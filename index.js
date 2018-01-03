@@ -6,13 +6,28 @@ const	topLogPrefix	= 'larvituser-api: ./index.js - ',
 	log	= require('winston');
 
 function UserApi(options) {
-	const that = this;
+	const	logPrefix	= topLogPrefix + 'UserApi() - ',
+		that	= this;
 
 	that.options	= options;
 
 	if ( ! that.options)	that.options	= {};
 
 	that.api	= new Api(that.options);
+
+	// Parse all incoming data as JSON
+	that.api.middleware.splice(1, 0, function (req, res, cb) {
+		if (req.rawBody) {
+			try {
+				req.jsonBody	= JSON.parse(req.rawBody.toString());
+			} catch (err) {
+				log.warn(logPrefix + 'Could not JSON parse incoming body. err: ' + err.message);
+				return cb(err);
+			}
+		}
+
+		cb();
+	});
 };
 
 UserApi.prototype.start = function (cb) {

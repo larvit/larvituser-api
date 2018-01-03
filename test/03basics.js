@@ -1,27 +1,16 @@
 'use strict';
 
-const	request	= require('request'),
+const	UserApi	= require(__dirname + '/../index.js'),
+	request	= require('request'),
 	async	= require('async'),
 	test	= require('tape'),
-	UserApi	= require(__dirname + '/../index.js'),
 	db	= require('larvitdb'),
 	options = {
 		'amqp': { 'default': 'loopback interface' },
 		'amsync':	{},
 		'log':	require(__dirname + '/../config/log_test.json'),
-		'db':	require(__dirname + '/../config/db_test.json')
+		'db':	db
 	};
-
-db.setup(options.db);
-
-test('Check db', function (t) {
-	db.query('SHOW TABLES', function (err, rows) {
-		if (err) throw err;
-
-		t.equals(rows.length, 0, 'SQL Database is not empty. To make a test, you must supply an empty database!');
-		t.end();
-	});
-});
 
 test('Get a response from a controller', function (t) {
 	const	tasks	= [];
