@@ -2,16 +2,16 @@
 
 const	topLogPrefix	= 'larvituser-api: ./index.js - ',
 	userLib	= require('larvituser'),
-	App	= require('larvitbase-api'),
+	Api	= require('larvitbase-api'),
 	log	= require('winston');
 
-function Api(options) {
+function UserApi(options) {
 	this.options	= options;
 
 	if ( ! this.options)	this.options	= {};
 };
 
-Api.prototype.start = function (cb) {
+UserApi.prototype.start = function (cb) {
 	const	logPrefix	= topLogPrefix + 'Api.prototype.start() - ',
 		that	= this;
 
@@ -34,14 +34,14 @@ Api.prototype.start = function (cb) {
 	userLib.ready(function (err) {
 		if (err) return cb(err);
 
-		that.app = new App(that.options);
-		that.app.start(cb);
+		that.api = new Api(that.options);
+		that.api.start(cb);
 	});;
 };
 
-Api.prototype.stop = function (cb) {
+UserApi.prototype.stop = function (cb) {
 	const that = this;
-	that.app.close(cb);
+	that.api.stop(cb);
 };
 
-exports = module.exports = Api;
+exports = module.exports = UserApi;
