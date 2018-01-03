@@ -15,17 +15,15 @@ const	UserApi	= require(__dirname + '/../index.js'),
 test('Get a response from a controller', function (t) {
 	const	tasks	= [];
 
-	let	userApi;
-
 	// Initialize api
 	tasks.push(function (cb) {
-		userApi	= new UserApi(options);
-		userApi.start(cb);
+		UserApi.instance	= new UserApi(options);
+		UserApi.instance.start(cb);
 	});
 
 	// Try 200 request for Readme.md
 	tasks.push(function (cb) {
-		request('http://localhost:' + userApi.api.lBase.httpServer.address().port, function (err, response, body) {
+		request('http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port, function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
 			t.equal(body.length,	5603);
@@ -35,7 +33,7 @@ test('Get a response from a controller', function (t) {
 
 	// Try 404 request
 	tasks.push(function (cb) {
-		request('http://localhost:' + userApi.api.lBase.httpServer.address().port + '/foo', function (err, response, body) {
+		request('http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/foo', function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	404);
 			t.equal(body,	'"URL endpoint not found"');
@@ -43,21 +41,8 @@ test('Get a response from a controller', function (t) {
 		});
 	});
 
-	// Close server
-	tasks.push(function (cb) {
-		userApi.stop(cb);
-	});
-
 	async.series(tasks, function (err) {
 		if (err) throw err;
 		t.end();
-	});
-});
-
-test('Clean db', function (t) {
-	db.removeAllTables(function (err) {
-		if (err) throw err;
-		t.end();
-		process.exit(0);
 	});
 });
