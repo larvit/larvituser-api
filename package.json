@@ -17,7 +17,7 @@
   "private": false,
   "dependencies": {
     "async": "^2.6.0",
-    "larvitbase-api": "^0.2.0",
+    "larvitbase-api": "^0.2.1",
     "larvituser": "^0.12.3",
     "winston": "^2.3.1"
   },
