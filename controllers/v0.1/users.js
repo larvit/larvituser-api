@@ -12,8 +12,8 @@ exports = module.exports = function (req, res, cb) {
 		log.info(topLogPrefix + 'Got request with unallowed method: "' + req.method + '", query: "' + req.urlParsed.href + '"');
 		res.setHeader('Content-Type', 'text/plain');
 		res.statusCode	= 405;
-		res.end('Method not allowed');
-		return cb(null, req, res, {});
+		res.data = '"Method not allowed"';
+		return cb();
 	}
 
 	log.verbose(topLogPrefix + 'Got request for users with query "' + req.urlParsed.href + '"');
@@ -45,6 +45,6 @@ exports = module.exports = function (req, res, cb) {
 	});
 
 	async.parallel(tasks, function (err) {
-		cb(err, req, res);
+		cb(err);
 	});
 };

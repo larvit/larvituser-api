@@ -22,6 +22,21 @@ test('Create users to list', function (t) {
 	});
 });
 
+test('Only allow GET', function (t) {
+	const reqOptions = {};
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users';
+	reqOptions.method	= 'POST';
+	reqOptions.json	= true;
+
+	request(reqOptions, function (err, response, body) {
+		if (err) return cb(err);
+
+		t.equal(response.statusCode,	405);
+		t.equal(body, 'Method not allowed');
+		t.end();
+	});
+});
+
 test('List users', function (t) {
 	const	tasks	= [];
 
