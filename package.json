@@ -18,7 +18,8 @@
   "dependencies": {
     "async": "^2.6.0",
     "larvitbase-api": "^0.2.1",
-    "larvituser": "^0.12.3",
+    "larvituser": "^0.13.0",
+    "larvitutils": "^1.1.2",
     "winston": "^2.3.1"
   },
   "devDependencies": {

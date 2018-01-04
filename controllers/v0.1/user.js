@@ -1,12 +1,133 @@
 'use strict';
 
-const logPrefix = 'larvituser-api ./controllers/api/v0.1/user.js - ',
+const topLogPrefix = 'larvituser-api: ./controllers/api/v0.1/user.js - ',
 	userLib	= require('larvituser'),
+	lUtils	= require('larvitutils'),
 	utils	= require(__dirname + '/../../utils.js'),
 	async	= require('async'),
 	log	= require('winston');
 
-exports.run = function (req, res, cb) {
+function createUser(req, res, cb) {
+	const	tasks	= [];
+
+	let	logPrefix	= topLogPrefix	+ 'createUser() - ',
+		user;
+
+	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
+
+	// Check uuid for validity
+	if (req.jsonBody.uuid) {
+		req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
+
+		if (eq.jsonBody.uuid === false) {
+			res.statusCode	= 400;
+			res.data	= 'Bad Request\nProvided uuid have invalid format';
+			return cb();
+		}
+	}
+
+	// Check so username is a valid string
+	if ( ! req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
+		res.statusCode	= 400;
+		res.data	= 'Bad Request\nNo username provided';
+		return cb();
+	}
+
+	req.jsonBody.username	= String(req.jsonBody.username).trim();
+
+	if (req.jsonBody.username.length > 191) {
+		res.statusCode	= 400;
+		res.data	= 'Bad Request\nUsername to long; maximum 191 UTF-8 characters allowed';
+		return cb();
+	}
+
+	// Check if user exists on given uuid, otherwise create it
+	if (req.jsonBody.uuid) {
+		logPrefix += 'userUuid: ' + req.jsonBody.uuid + ' - ';
+
+		tasks.push(function (cb) {
+			log.debug(logPrefix + 'Trying to load previous user');
+			userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
+				if (err) return cb(err);
+
+				if (result) {
+					log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
+					user	= result;
+				}
+			});
+		});
+	}
+
+	// Check username availibility
+	tasks.push(function (cb) {
+		if (user && user.username === req.jsonBody.username) {
+			log.debug(logPrefix + 'Previous user loaded and username change is not requested, moving on');
+			return cb();
+		}
+
+		userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
+			if (err) return cb(err);
+
+			if ( ! result) {
+				log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
+				res.statusCode	= 422;
+				res.data	= 'Unprocessable Entity\nUsername is taken by another user';
+				return cb();
+			}
+
+			log.debug(logPrefix + 'Username is available, moving on');
+
+			cb();
+		});
+	});
+
+	// Create new user if needed
+	tasks.push(function (cb) {
+		if (user) return cb();
+
+		userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
+			if (err) return cb(err);
+			user	= result;
+			log.debug(logPrefix + 'New user created');
+			cb();
+		});
+	});
+
+	// Set username and fields if this is an update of an existing user
+	tasks.push(function (cb) {
+		if (user.uuid === req.jsonBody.uuid) return cb();
+
+		user.setUsername(req.jsonBody.username, function (err) {
+			if (err) return cb(err);
+			log.debug(logPrefix + 'Username updated');
+			user.replaceFields(req.jsonBody.fields, function (err) {
+				if (err) return cb(err);
+				log.debug(logPrefix + 'Fields replaced');
+				cb();
+			});
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) return cb(err);
+		res.data	= user;
+		cb();
+	});
+}
+
+function controller(req, res, cb) {
+	const	logPrefix	= topLogPrefix + 'controller() - ';
+
+	if (req.method.toUpperCase() === 'PUT') {
+		createUser(req, res, cb);
+	} else {
+		res.statusCode	= 405;
+		res.data	= '405 Method Not Allowed\nAllowed methods: GET, PUT, PATCH, DELETE';
+		cb();
+	}
+
+	return;
+
 	const	tasks = [];
 
 	let result,
@@ -199,3 +320,5 @@ exports.run = function (req, res, cb) {
 		if ( ! responseSent) cb(err, req, res, result);
 	});
 };
+
+exports = module.exports = controller;

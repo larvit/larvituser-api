@@ -21,8 +21,10 @@ function UserApi(options) {
 			try {
 				req.jsonBody	= JSON.parse(req.rawBody.toString());
 			} catch (err) {
-				log.warn(logPrefix + 'Could not JSON parse incoming body. err: ' + err.message);
-				return cb(err);
+				res.statusCode	= 400;
+				res.end('"Bad Request\nProvided body is not a valid JSON string"');
+				log.verbose(logPrefix + 'Could not JSON parse incoming body. err: ' + err.message);
+				return;
 			}
 		}
 
