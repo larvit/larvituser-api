@@ -9,10 +9,10 @@ const	UserApi	= require(__dirname + '/../index.js'),
 
 
 test('Create user to login with', function (t) {
-	const tasks = [];
+	const	tasks	= [];
 
 	tasks.push(function (cb) {
-		userLib.create('user-login', 'skärböna', { 'firstname': 'Svempa', 'lastname': 'Svampsson'}, uuidv4(), cb);
+		userLib.create('user-login', 'skärböna', { 'firstName': 'Svempa', 'lastname': 'Svampsson'}, uuidv4(), cb);
 	});
 
 	async.series(tasks, function (err) {
@@ -39,8 +39,8 @@ test('Successful login', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.username, 'user-login');
-			t.equal(body.fields.firstname[0], 'Svempa');
+			t.equal(body.username,	'user-login');
+			t.equal(body.fields.firstName[0],	'Svempa');
 			cb();
 		});
 	});
@@ -61,15 +61,15 @@ test('Failed login', function (t) {
 		reqOptions.method	= 'POST';
 		reqOptions.json	= true;
 		reqOptions.body	= {
-			'username': 'user-login',
-			'password': 'fel lösenord'
+			'username':	'user-login',
+			'password':	'fel lösenord'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body, false);
+			t.equal(body,	false);
 			cb();
 		});
 	});
@@ -90,15 +90,15 @@ test('Malformed body', function (t) {
 		reqOptions.method	= 'POST';
 		reqOptions.json	= true;
 		reqOptions.body	= {
-			'sdf': 'user-login',
-			'password': 'fel lösenord'
+			'sdf':	'user-login',
+			'password':	'fel lösenord'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	400);
-			t.equal(body, '400 Malformed request body');
+			t.equal(body,	'400 Malformed request body');
 			cb();
 		});
 	});
@@ -119,15 +119,15 @@ test('Unallowed method', function (t) {
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= {
-			'username': 'user-login',
-			'password': 'skärböna'
+			'username':	'user-login',
+			'password':	'skärböna'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	405);
-			t.equal(body, '405 Method Not Allowed\nAllowed methods: POST');
+			t.equal(body,	'405 Method Not Allowed\nAllowed methods: POST');
 			cb();
 		});
 	});

@@ -8,11 +8,11 @@ const	UserApi	= require(__dirname + '/../index.js'),
 	test	= require('tape');
 
 test('Create users to list', function (t) {
-	const tasks = [];
+	const	tasks	= [];
 
 	for (let i = 0; i < 3; i ++) {
 		tasks.push(function (cb) {
-			userLib.create('user-' + i, 'password-' + i, { 'firstname': 'Benkt-' + i, 'lastname': 'Usersson-' + i}, uuidv4(), cb);
+			userLib.create('user-' + i, 'password-' + i, { 'firstName': 'Benkt-' + i, 'lastname': 'Usersson-' + i}, uuidv4(), cb);
 		});
 	}
 
@@ -23,7 +23,8 @@ test('Create users to list', function (t) {
 });
 
 test('Only allow GET', function (t) {
-	const reqOptions = {};
+	const	reqOptions	= {};
+
 	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users';
 	reqOptions.method	= 'POST';
 	reqOptions.json	= true;
@@ -32,14 +33,13 @@ test('Only allow GET', function (t) {
 		if (err) return cb(err);
 
 		t.equal(response.statusCode,	405);
-		t.equal(body, 'Method not allowed');
+		t.equal(body,	'Method not allowed');
 		t.end();
 	});
 });
 
 test('List users', function (t) {
 	const	tasks	= [];
-
 
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
@@ -52,7 +52,7 @@ test('List users', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 3);
+			t.equal(body.length,	3);
 			cb();
 		});
 	});
@@ -64,18 +64,18 @@ test('List users', function (t) {
 });
 
 test('Get users based on uuid', function (t) {
-	const tasks = [];
+	const	tasks	= [];
 
-	let users;
+	let	users;
 
 	tasks.push(function (cb) {
 		new userLib.Users().get(function (err, result) {
-			users = result;
+			users	= result;
 			cb(err);
 		});
 	});
 
-	// get one user
+	// Get one user
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
@@ -87,13 +87,13 @@ test('Get users based on uuid', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 1);
-			t.equal(body[0].uuid, users[0].uuid);
+			t.equal(body.length,	1);
+			t.equal(body[0].uuid,	users[0].uuid);
 			cb();
 		});
 	});
 
-	// get two users
+	// Get two users
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
@@ -105,7 +105,7 @@ test('Get users based on uuid', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 2);
+			t.equal(body.length,	2);
 			cb();
 		});
 	});
@@ -117,7 +117,7 @@ test('Get users based on uuid', function (t) {
 });
 
 test('Get users with limit', function (t) {
-	const tasks = [];
+	const	tasks	= [];
 
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
@@ -130,7 +130,7 @@ test('Get users with limit', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 2);
+			t.equal(body.length,	2);
 			cb();
 		});
 	});
@@ -155,8 +155,8 @@ test('Get users with offset', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 1);
-			t.equal(body[0].username, 'user-2');
+			t.equal(body.length,	1);
+			t.equal(body[0].username,	'user-2');
 			cb();
 		});
 	});
@@ -168,12 +168,12 @@ test('Get users with offset', function (t) {
 });
 
 test('Get users and fields', function (t) {
-	const tasks = [];
+	const	tasks	= [];
 
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?returnFields=firstname';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?returnFields=firstName';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -181,11 +181,11 @@ test('Get users and fields', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 3);
+			t.equal(body.length,	3);
 
 			for (const user of body) {
-				t.notEqual(user.firstname, undefined);
-				t.equal(user.firstname.length, 1);
+				t.notEqual(user.firstName,	undefined);
+				t.equal(user.firstName.length,	1);
 			}
 
 			cb();

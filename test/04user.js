@@ -78,3 +78,13 @@ test('PUT user', function (t) {
 		t.end();
 	});
 });
+
+test('Clear users and users data', function (t) {
+	db.query('DELETE FROM user_users_data', function (err) {
+		if (err) throw err;
+		db.query('DELETE FROM user_users', function (err) {
+			if (err) throw err;
+			t.end();
+		});
+	});
+});
