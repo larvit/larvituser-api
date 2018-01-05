@@ -11,7 +11,7 @@ REST http API module wrapper around the user library [larvituser](https://github
 npm i larvituser-api
 ```
 
-## Basic usage
+## Code API Basic usage
 
 In the file index.js:
 
@@ -116,7 +116,7 @@ Obtain a user by username and password. **Do not use this if your connection is 
 
 ### PUT /user
 
-Create or update a specific user, defined by uuid.
+Create or replace a specific user, defined by uuid.
 
 Some considerations:
 

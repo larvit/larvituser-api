@@ -3,14 +3,14 @@
 const topLogPrefix = 'larvituser-api: ./controllers/api/v0.1/user.js - ',
 	userLib	= require('larvituser'),
 	lUtils	= require('larvitutils'),
-	utils	= require(__dirname + '/../../utils.js'),
+	//utils	= require(__dirname + '/../../utils.js'),
 	async	= require('async'),
 	log	= require('winston');
 
-function createUser(req, res, cb) {
+function createOrReplaceUser(req, res, cb) {
 	const	tasks	= [];
 
-	let	logPrefix	= topLogPrefix	+ 'createUser() - ',
+	let	logPrefix	= topLogPrefix	+ 'createOrReplaceUser() - ',
 		user;
 
 	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
@@ -19,7 +19,7 @@ function createUser(req, res, cb) {
 	if (req.jsonBody.uuid) {
 		req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
 
-		if (eq.jsonBody.uuid === false) {
+		if (req.jsonBody.uuid === false) {
 			res.statusCode	= 400;
 			res.data	= 'Bad Request\nProvided uuid have invalid format';
 			return cb();
@@ -54,6 +54,7 @@ function createUser(req, res, cb) {
 					log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
 					user	= result;
 				}
+				cb();
 			});
 		});
 	}
@@ -93,18 +94,19 @@ function createUser(req, res, cb) {
 		});
 	});
 
-	// Set username and fields if this is an update of an existing user
+	// Set username if it has changed
 	tasks.push(function (cb) {
-		if (user.uuid === req.jsonBody.uuid) return cb();
+		if (user.username === req.jsonBody.username) return cb();
 
-		user.setUsername(req.jsonBody.username, function (err) {
+		user.setUsername(req.jsonBody.username, cb);
+	});
+
+	// Set fields
+	tasks.push(function (cb) {
+		user.replaceFields(req.jsonBody.fields, function (err) {
 			if (err) return cb(err);
-			log.debug(logPrefix + 'Username updated');
-			user.replaceFields(req.jsonBody.fields, function (err) {
-				if (err) return cb(err);
-				log.debug(logPrefix + 'Fields replaced');
-				cb();
-			});
+			log.debug(logPrefix + 'Fields replaced');
+			cb();
 		});
 	});
 
@@ -115,11 +117,15 @@ function createUser(req, res, cb) {
 	});
 }
 
-function controller(req, res, cb) {
-	const	logPrefix	= topLogPrefix + 'controller() - ';
+function getUser(req, res, cb) {
+	cb();
+}
 
-	if (req.method.toUpperCase() === 'PUT') {
-		createUser(req, res, cb);
+function controller(req, res, cb) {
+	if (req.method.toUpperCase() === 'GET') {
+		getUser(req, res, cb);
+	} else if (req.method.toUpperCase() === 'PUT') {
+		createOrReplaceUser(req, res, cb);
 	} else {
 		res.statusCode	= 405;
 		res.data	= '405 Method Not Allowed\nAllowed methods: GET, PUT, PATCH, DELETE';
@@ -127,7 +133,7 @@ function controller(req, res, cb) {
 	}
 
 	return;
-
+	/*
 	const	tasks = [];
 
 	let result,
@@ -319,6 +325,7 @@ function controller(req, res, cb) {
 
 		if ( ! responseSent) cb(err, req, res, result);
 	});
+	*/
 };
 
 exports = module.exports = controller;
