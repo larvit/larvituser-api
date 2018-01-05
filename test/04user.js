@@ -158,6 +158,59 @@ test('PUT user, update user', function (t) {
 	});
 });
 
+test('GET user', function (t) {
+	const	userUuid	= uuidv1(),
+		tasks	= [];
+
+	// Create user
+	tasks.push(function (cb) {
+		userLib.create('getUser', 'stolle', {'baj': 'en'}, userUuid, cb);
+	});
+
+	// Run request
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + userUuid;
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	200);
+			t.equal(body.username,	'getUser');
+			t.equal(body.uuid,	userUuid);
+			t.equal(body.fields.baj.length,	1);
+			t.equal(body.fields.baj[0],	'en');
+			t.equal(Object.keys(body.fields).length,	1);
+
+			cb();
+		});
+	});
+
+	// 404 request for non existing user
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + uuidv1();
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	404);
+			t.equal(body,	'Not Found');
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
 test('Clear users and users data', function (t) {
 	db.query('DELETE FROM user_users_data', function (err) {
 		if (err) throw err;

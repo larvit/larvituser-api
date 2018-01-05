@@ -118,7 +118,31 @@ function createOrReplaceUser(req, res, cb) {
 }
 
 function getUser(req, res, cb) {
-	cb();
+
+	// Check uuid for validity
+	if (req.urlParsed.query.uuid) {
+		req.urlParsed.query.uuid	= lUtils.formatUuid(req.urlParsed.query.uuid);
+
+		if (req.urlParsed.query.uuid === false) {
+			res.statusCode	= 400;
+			res.data	= 'Bad Request\nProvided uuid have invalid format';
+			return cb();
+		}
+	}
+
+	// Fetch user
+	userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
+		if (err) return cb(err);
+
+		if ( ! user) {
+			res.statusCode	= 404;
+			res.data	= 'Not Found';
+			return cb();
+		}
+
+		res.data	= user;
+		cb();
+	});
 }
 
 function controller(req, res, cb) {
