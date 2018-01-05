@@ -293,7 +293,7 @@ function controller(req, res, cb) {
 		patchUser(req, res, cb);
 	} else {
 		res.statusCode	= 405;
-		res.data	= '405 Method Not Allowed\nAllowed methods: GET, PUT, PATCH, DELETE';
+		res.data	= '405 Method Not Allowed\nAllowed method(s): GET, PUT, PATCH, DELETE';
 		cb();
 	}
 
