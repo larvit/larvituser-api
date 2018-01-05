@@ -167,11 +167,32 @@ test('GET user', function (t) {
 		userLib.create('getUser', 'stolle', {'baj': 'en'}, userUuid, cb);
 	});
 
-	// Run request
+	// Get by uuid
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
 		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + userUuid;
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	200);
+			t.equal(body.username,	'getUser');
+			t.equal(body.uuid,	userUuid);
+			t.equal(body.fields.baj.length,	1);
+			t.equal(body.fields.baj[0],	'en');
+			t.equal(Object.keys(body.fields).length,	1);
+
+			cb();
+		});
+	});
+
+	// Get by username
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?username=getuser';
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {

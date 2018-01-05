@@ -119,6 +119,16 @@ function createOrReplaceUser(req, res, cb) {
 
 function getUser(req, res, cb) {
 
+	if (req.urlParsed.query.uuid && req.urlParsed.query.username) {
+		res.statusCode	= 422;
+		res.data	= 'Unprocessable Entity\nOnly one of uuid and username is allowed at every single request';
+		return cb();
+	} else if ( ! req.urlParsed.query.uuid && ! req.urlParsed.query.username) {
+		res.statusCode	= 422;
+		res.data	= 'Unprocessable Entity\nURL parameters uuid or username is required';
+		return cb();
+	}
+
 	// Check uuid for validity
 	if (req.urlParsed.query.uuid) {
 		req.urlParsed.query.uuid	= lUtils.formatUuid(req.urlParsed.query.uuid);
@@ -128,21 +138,37 @@ function getUser(req, res, cb) {
 			res.data	= 'Bad Request\nProvided uuid have invalid format';
 			return cb();
 		}
+
+		// Fetch user
+		userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
+			if (err) return cb(err);
+
+			if ( ! user) {
+				res.statusCode	= 404;
+				res.data	= 'Not Found';
+				return cb();
+			}
+
+			res.data	= user;
+			cb();
+		});
+	} else if (req.urlParsed.query.username) {
+		req.urlParsed.query.username	= String(req.urlParsed.query.username);
+
+		// Fetch user
+		userLib.fromUsername(req.urlParsed.query.username, function (err, user) {
+			if (err) return cb(err);
+
+			if ( ! user) {
+				res.statusCode	= 404;
+				res.data	= 'Not Found';
+				return cb();
+			}
+
+			res.data	= user;
+			cb();
+		});
 	}
-
-	// Fetch user
-	userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
-		if (err) return cb(err);
-
-		if ( ! user) {
-			res.statusCode	= 404;
-			res.data	= 'Not Found';
-			return cb();
-		}
-
-		res.data	= user;
-		cb();
-	});
 }
 
 function controller(req, res, cb) {
