@@ -6,7 +6,7 @@ const	test	= require('tape'),
 if (process.env.DBCONFFILE === undefined) {
 	db.setup(require(__dirname + '/../config/db_test.json'));
 } else {
-	db.setup(require(process.env.DBCONFFILE));
+	db.setup(require(__dirname + '/' + process.env.DBCONFFILE));
 }
 
 
