@@ -21,4 +21,4 @@ services:
   - mysql
 
 env:
-  - DBCONFFILE=db_travis.json
+  - DBCONFFILE=config/db_travis.json
