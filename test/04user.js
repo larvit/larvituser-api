@@ -232,6 +232,253 @@ test('GET user', function (t) {
 	});
 });
 
+test('PATCH user - fields', function (t) {
+	const	userUuid	= uuidv1(),
+		tasks	= [];
+
+	// Create user
+	tasks.push(function (cb) {
+		userLib.create('patchUser', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
+	});
+
+	// Run request
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.method	= 'PATCH';
+		reqOptions.body	= {};
+		reqOptions.body.uuid	= userUuid;
+		reqOptions.body.fields	= {};
+		reqOptions.body.fields.palt	= 'korv';
+		reqOptions.body.fields.beff	= 'yes';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+			t.equal(response.statusCode,	200);
+
+			t.equal(body.username,	'patchUser');
+			t.equal(body.uuid,	userUuid);
+			t.equal(body.fields.bing.length,	1);
+			t.equal(body.fields.bing[0],	'bong');
+			t.equal(body.fields.palt.length,	1);
+			t.equal(body.fields.palt[0],	'korv');
+			t.equal(body.fields.beff.length,	1);
+			t.equal(body.fields.beff[0],	'yes');
+			t.equal(Object.keys(body.fields).length,	3);
+
+			cb();
+		});
+	});
+
+	// Check data in database
+	tasks.push(function (cb) {
+		db.query('SELECT * FROM user_users WHERE username = \'patchUser\'', function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	1);
+			t.equal(lUtils.formatUuid(rows[0].uuid),	userUuid);
+			t.equal(rows[0].username,	'patchUser');
+
+			cb();
+		});
+	});
+
+	tasks.push(function (cb) {
+		let	sql	= '';
+
+		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
+		sql += 'FROM user_users_data ud\n';
+		sql += '	JOIN user_users u ON u.uuid = ud.userUuid\n';
+		sql += '	JOIN user_data_fields f ON f.uuid = ud.fieldUuid\n';
+		sql += 'WHERE u.username = ?\n';
+		sql += 'ORDER BY ud.data';
+
+		db.query(sql, ['patchUser'], function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	3);
+			t.equal(rows[0].username,	'patchUser');
+			t.equal(rows[0].fieldName,	'bing');
+			t.equal(rows[0].data,	'bong');
+			t.equal(rows[1].fieldName,	'palt');
+			t.equal(rows[1].data,	'korv');
+			t.equal(rows[2].fieldName,	'beff');
+			t.equal(rows[2].data,	'yes');
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('PATCH user - username', function (t) {
+	const	userUuid	= uuidv1(),
+		tasks	= [];
+
+	// Create user
+	tasks.push(function (cb) {
+		userLib.create('patchUser_username', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
+	});
+
+	// Run request
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.method	= 'PATCH';
+		reqOptions.body	= {};
+		reqOptions.body.uuid	= userUuid;
+		reqOptions.body.username	= 'patchUser_username_updated';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+			t.equal(response.statusCode,	200);
+
+			t.equal(body.username,	'patchUser_username_updated');
+			t.equal(body.uuid,	userUuid);
+			t.equal(body.fields.bing.length,	1);
+			t.equal(body.fields.bing[0],	'bong');
+			t.equal(body.fields.palt.length,	1);
+			t.equal(body.fields.palt[0],	'koma');
+			t.equal(Object.keys(body.fields).length,	2);
+
+			cb();
+		});
+	});
+
+	// Check data in database
+	tasks.push(function (cb) {
+		db.query('SELECT * FROM user_users WHERE username = \'patchUser_username_updated\'', function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	1);
+			t.equal(lUtils.formatUuid(rows[0].uuid),	userUuid);
+
+			cb();
+		});
+	});
+
+	tasks.push(function (cb) {
+		let	sql	= '';
+
+		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
+		sql += 'FROM user_users_data ud\n';
+		sql += '	JOIN user_users u ON u.uuid = ud.userUuid\n';
+		sql += '	JOIN user_data_fields f ON f.uuid = ud.fieldUuid\n';
+		sql += 'WHERE u.username = ?\n';
+		sql += 'ORDER BY ud.data';
+
+		db.query(sql, ['patchUser_username_updated'], function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	2);
+			t.equal(rows[0].fieldName,	'bing');
+			t.equal(rows[0].data,	'bong');
+			t.equal(rows[1].fieldName,	'palt');
+			t.equal(rows[1].data,	'koma');
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('PATCH user - username and fields', function (t) {
+	const	userUuid	= uuidv1(),
+		tasks	= [];
+
+	// Create user
+	tasks.push(function (cb) {
+		userLib.create('patchUser_username_and_fields', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
+	});
+
+	// Run request
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.method	= 'PATCH';
+		reqOptions.body	= {};
+		reqOptions.body.uuid	= userUuid;
+		reqOptions.body.username	= 'patchUser_username_and_fields_updated';
+		reqOptions.body.fields	= {};
+		reqOptions.body.fields.palt	= 'korv';
+		reqOptions.body.fields.beff	= 'yes';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+			t.equal(response.statusCode,	200);
+
+			t.equal(body.username,	'patchUser_username_and_fields_updated');
+			t.equal(body.uuid,	userUuid);
+			t.equal(body.fields.bing.length,	1);
+			t.equal(body.fields.bing[0],	'bong');
+			t.equal(body.fields.palt.length,	1);
+			t.equal(body.fields.palt[0],	'korv');
+			t.equal(body.fields.beff.length,	1);
+			t.equal(body.fields.beff[0],	'yes');
+			t.equal(Object.keys(body.fields).length,	3);
+
+			cb();
+		});
+	});
+
+	// Check data in database
+	tasks.push(function (cb) {
+		db.query('SELECT * FROM user_users WHERE username = \'patchUser_username_and_fields_updated\'', function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	1);
+			t.equal(lUtils.formatUuid(rows[0].uuid),	userUuid);
+
+			cb();
+		});
+	});
+
+	tasks.push(function (cb) {
+		let	sql	= '';
+
+		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
+		sql += 'FROM user_users_data ud\n';
+		sql += '	JOIN user_users u ON u.uuid = ud.userUuid\n';
+		sql += '	JOIN user_data_fields f ON f.uuid = ud.fieldUuid\n';
+		sql += 'WHERE u.username = ?\n';
+		sql += 'ORDER BY ud.data';
+
+		db.query(sql, ['patchUser_username_and_fields_updated'], function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	3);
+			t.equal(rows[0].username,	'patchUser_username_and_fields_updated');
+			t.equal(rows[0].fieldName,	'bing');
+			t.equal(rows[0].data,	'bong');
+			t.equal(rows[1].fieldName,	'palt');
+			t.equal(rows[1].data,	'korv');
+			t.equal(rows[2].fieldName,	'beff');
+			t.equal(rows[2].data,	'yes');
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
 test('DELETE user', function (t) {
 	const	userUuid	= uuidv1(),
 		tasks	= [];
