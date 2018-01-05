@@ -232,6 +232,51 @@ test('GET user', function (t) {
 	});
 });
 
+test('DELETE user', function (t) {
+	const	userUuid	= uuidv1(),
+		tasks	= [];
+
+	// Create user
+	tasks.push(function (cb) {
+		userLib.create('deleteUser', 'stolle', {'weng': 'wong'}, userUuid, cb);
+	});
+
+	// Delete
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.method	= 'DELETE';
+		reqOptions.body	= {};
+		reqOptions.body.uuid	= userUuid;
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	200);
+			t.equal(body,	'acknowledged');
+
+			cb();
+		});
+	});
+
+	// Check database
+	tasks.push(function (cb) {
+		db.query('SELECT uuid FROM user_users WHERE username = ?', 'deleteUser', function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length,	0);
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
 test('Clear users and users data', function (t) {
 	db.query('DELETE FROM user_users_data', function (err) {
 		if (err) throw err;

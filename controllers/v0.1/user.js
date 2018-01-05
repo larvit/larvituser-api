@@ -117,8 +117,22 @@ function createOrReplaceUser(req, res, cb) {
 	});
 }
 
-function getUser(req, res, cb) {
+function deleteUser(req, res, cb) {
+	// Check uuid for validity
+	req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
 
+	if (req.jsonBody.uuid === false) {
+		res.statusCode	= 400;
+		res.data	= 'Bad Request\nProvided uuid have invalid format';
+		return cb();
+	}
+
+	res.data	= 'acknowledged';
+
+	userLib.rmUser(req.urlParsed.query.uuid, cb);
+}
+
+function getUser(req, res, cb) {
 	if (req.urlParsed.query.uuid && req.urlParsed.query.username) {
 		res.statusCode	= 422;
 		res.data	= 'Unprocessable Entity\nOnly one of uuid and username is allowed at every single request';
@@ -176,6 +190,8 @@ function controller(req, res, cb) {
 		getUser(req, res, cb);
 	} else if (req.method.toUpperCase() === 'PUT') {
 		createOrReplaceUser(req, res, cb);
+	} else if (req.method.toUpperCase() === 'DELETE') {
+		deleteUser(req, res, cb);
 	} else {
 		res.statusCode	= 405;
 		res.data	= '405 Method Not Allowed\nAllowed methods: GET, PUT, PATCH, DELETE';
