@@ -8,8 +8,8 @@ const	topLogPrefix	= 'larvituser-api: ./index.js - ',
 	fs	= require('fs'),
 	db	= require('larvitdb'),
 	parser = new ArgParser({
-		'addHelp': false, // -h was reserved for help so had to disable :/
-		'description': 'Larvituser-api example'
+		'addHelp':	false, // -h was reserved for help so had to disable :/
+		'description':	'Larvituser-api example'
 	});
 
 parser.addArgument(['-cd', '--configDir'], {'help': '/path/to/dir/with/config/files'});
@@ -82,26 +82,26 @@ UserApi.prototype.stop = function (cb) {
 
 exports = module.exports = UserApi;
 
-// running from console
+// Running from console
 if (require.main === module) {
-	const args = parser.parseArgs();
+	const	args	= parser.parseArgs();
 
-	let cd,
-		options,
-		api;
+	let	options,
+		api,
+		cd;
 
 	if (args.configDir) {
 		console.log('Looking for config files in "' + args.configDir + '"');
-		cd = args.configDir;
+		cd	= args.configDir;
 	} else if ((args.host || args.socket) && args.user && args.password && args.database) {
 		options = {
 			'db': {
-				'host': args.host + (args.port ? ':' + args.port : ''),
-				'socketPath': args.socket,
-				'user': args.user,
-				'password': args.password,
-				'database': args.database,
-				'connectionLimit': 10,
+				'host':	args.host + (args.port ? ':' + args.port : ''),
+				'socketPath':	args.socket,
+				'user':	args.user,
+				'password':	args.password,
+				'database':	args.database,
+				'connectionLimit':	10,
 				'charset':	'utf8mb4_general_ci',
 				'supportBigNumbers':	true,
 				'recoverableErrors':	['PROTOCOL_CONNECTION_LOST', 'ER_LOCK_DEADLOCK', 'ETIMEDOUT']
@@ -109,7 +109,7 @@ if (require.main === module) {
 		};
 		console.log('Using configuration options from arguments');
 	} else {
-		cd = __dirname + '/config';
+		cd	= __dirname + '/config';
 		console.log('Looking for config files in "' + cd + '"');
 	}
 
@@ -127,14 +127,14 @@ if (require.main === module) {
 
 	if (options && options.db) {
 		db.setup(options.db);
-		options.db = db;
-		api = new UserApi(options);
+		options.db	= db;
+		api	= new UserApi(options);
 		api.start(function (err) {
 			if (err) throw err;
 			console.log('Api up and running on port ' + api.api.lBase.httpServer.address().port);
 		});
 	} else {
 		console.log('Invalid or insufficient parameters');
-		process.exit(0);
+		process.exit(1);
 	}
 }
