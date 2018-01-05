@@ -26,7 +26,7 @@ test('Get a response from a controller', function (t) {
 		request('http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port, function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	5603);
+			t.equal(body.length,	5613);
 			cb();
 		});
 	});
