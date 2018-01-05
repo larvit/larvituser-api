@@ -14,6 +14,8 @@ function createOrReplaceUser(req, res, cb) {
 
 	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
 
+	res.statusCode	= 200;
+
 	// Check uuid for validity
 	if (req.jsonBody.uuid) {
 		req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
@@ -35,8 +37,8 @@ function createOrReplaceUser(req, res, cb) {
 	req.jsonBody.username	= String(req.jsonBody.username).trim();
 
 	if (req.jsonBody.username.length > 191) {
-		res.statusCode	= 400;
-		res.data	= 'Bad Request\nUsername to long; maximum 191 UTF-8 characters allowed';
+		res.statusCode	= 422;
+		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
 		return cb();
 	}
 
@@ -83,7 +85,7 @@ function createOrReplaceUser(req, res, cb) {
 
 	// Create new user if needed
 	tasks.push(function (cb) {
-		if (user) return cb();
+		if (user || res.statusCode !== 200) return cb();
 
 		userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
 			if (err) return cb(err);
@@ -95,13 +97,17 @@ function createOrReplaceUser(req, res, cb) {
 
 	// Set username if it has changed
 	tasks.push(function (cb) {
-		if (user.username === req.jsonBody.username) return cb();
+		if ((user && user.username === req.jsonBody.username) || res.statusCode !== 200) {
+			return cb();
+		}
 
 		user.setUsername(req.jsonBody.username, cb);
 	});
 
 	// Set fields
 	tasks.push(function (cb) {
+		if (res.statusCode !== 200) return cb();
+
 		user.replaceFields(req.jsonBody.fields, function (err) {
 			if (err) return cb(err);
 			log.debug(logPrefix + 'Fields replaced');
@@ -111,7 +117,7 @@ function createOrReplaceUser(req, res, cb) {
 
 	async.series(tasks, function (err) {
 		if (err) return cb(err);
-		res.data	= user;
+		if (res.statusCode === 200) res.data	= user;
 		cb();
 	});
 }
@@ -135,12 +141,12 @@ function deleteUser(req, res, cb) {
 
 function getUser(req, res, cb) {
 	if (req.urlParsed.query.uuid && req.urlParsed.query.username) {
-		res.statusCode	= 422;
-		res.data	= 'Unprocessable Entity\nOnly one of uuid and username is allowed at every single request';
+		res.statusCode	= 400;
+		res.data	= 'Bad Request\nOnly one of uuid and username is allowed at every single request';
 		return cb();
 	} else if ( ! req.urlParsed.query.uuid && ! req.urlParsed.query.username) {
-		res.statusCode	= 422;
-		res.data	= 'Unprocessable Entity\nURL parameters uuid or username is required';
+		res.statusCode	= 400;
+		res.data	= 'Bad Request\nURL parameters uuid or username is required';
 		return cb();
 	}
 
@@ -203,6 +209,13 @@ function patchUser(req, res, cb) {
 		return cb();
 	}
 
+	// Check username length
+	if (req.jsonBody.username && req.jsonBody.username.length > 191) {
+		res.statusCode	= 422;
+		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
+		return cb();
+	}
+
 	// Check username for validity
 	if (req.jsonBody.username) {
 		req.jsonBody.username	= String(req.jsonBody.username).trim();
@@ -247,7 +260,7 @@ function patchUser(req, res, cb) {
 	tasks.push(function (cb) {
 		const	newFields	= {};
 
-		if ( ! user || ! req.jsonBody.fields) return cb();
+		if ( ! user || ! req.jsonBody.fields || res.statusCode !== 200) return cb();
 
 		for (const fieldName of Object.keys(user.fields)) {
 			newFields[fieldName]	= user.fields[fieldName];
@@ -277,7 +290,10 @@ function patchUser(req, res, cb) {
 			res.data	= 'Not Found';
 		}
 
-		res.data	= user;
+		if (res.statusCode === 200) {
+			res.data	= user;
+		}
+
 		cb();
 	});
 }
@@ -293,7 +309,7 @@ function controller(req, res, cb) {
 		patchUser(req, res, cb);
 	} else {
 		res.statusCode	= 405;
-		res.data	= '405 Method Not Allowed\nAllowed method(s): GET, PUT, PATCH, DELETE';
+		res.data	= 'Method Not Allowed\nAllowed method(s): GET, PUT, PATCH, DELETE';
 		cb();
 	}
 
