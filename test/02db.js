@@ -3,7 +3,12 @@
 const	test	= require('tape'),
 	db	= require('larvitdb');
 
-db.setup(require(__dirname + '/../config/db_test.json'));
+if (process.env.DBCONFFILE === undefined) {
+	db.setup(require(__dirname + '/../config/db_test.json'));
+} else {
+	db.setup(require(process.env.DBCONFFILE));
+}
+
 
 test('Check db', function (t) {
 	db.query('SHOW TABLES', function (err, rows) {

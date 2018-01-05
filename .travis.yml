@@ -13,3 +13,12 @@ after_script: "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls
 notifications:
   email:
     - lilleman@larvit.se
+
+before_script:
+  - mysql -e 'CREATE DATABASE test'
+
+services:
+  - mysql
+
+env:
+  - DBCONFFILE=db_travis.json
