@@ -3,7 +3,7 @@
 const topLogPrefix = 'larvituser-api: ./controllers/api/v0.1/user.js - ',
 	userLib	= require('larvituser'),
 	lUtils	= require('larvitutils'),
-	utils	= require(__dirname + '/../../utils.js'),
+	//utils	= require(__dirname + '/../../utils.js'),
 	async	= require('async'),
 	log	= require('winston');
 
@@ -117,10 +117,14 @@ function createOrReplaceUser(req, res, cb) {
 	});
 }
 
-function controller(req, res, cb) {
-	const	logPrefix	= topLogPrefix + 'controller() - ';
+function getUser(req, res, cb) {
+	cb();
+}
 
-	if (req.method.toUpperCase() === 'PUT') {
+function controller(req, res, cb) {
+	if (req.method.toUpperCase() === 'GET') {
+		getUser(req, res, cb);
+	} else if (req.method.toUpperCase() === 'PUT') {
 		createOrReplaceUser(req, res, cb);
 	} else {
 		res.statusCode	= 405;
@@ -129,7 +133,7 @@ function controller(req, res, cb) {
 	}
 
 	return;
-
+	/*
 	const	tasks = [];
 
 	let result,
@@ -321,6 +325,7 @@ function controller(req, res, cb) {
 
 		if ( ! responseSent) cb(err, req, res, result);
 	});
+	*/
 };
 
 exports = module.exports = controller;
