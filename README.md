@@ -216,27 +216,6 @@ Remove a user from the database
 "acknowledged"
 ```
 
-### DELETE /user/field
-
-Remove a user field from database for a specific user
-
-#### Request body example
-
-```json
-{
-	"userUuid":	"uuid string",
-	"fieldName":	"string"
-}
-```
-
-#### Response body example
-
-200 OK
-
-```json
-"acknowledged"
-```
-
 ### GET /users
 
 Fetch a list of users.
