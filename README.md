@@ -24,14 +24,14 @@ let	userApi;
 db.setup({'db': 'options'});	// See https://github.com/larvit/larvitdb for details
 
 userApi	= new UserApi({
-	'db':	require('larvitdb'),	// Must be a configured database instance
+	'db':	db,	// Must be a configured database instance
 	'appOptions':	{},	// Will be passed directly to larvitbase. For more info see: https://github.com/larvit/larvitbase
 	'intercom':	undefined,	// Or instance of larvitamintercom. For more info see: https://github.com/larvit/larvitamintercom
 	'mode':	undefined,	// DataWriter mode, see larvituser for more info: https://github.com/larvit/larvituser
 });
 
 userApi.start(function (err) {
-	if (err) throw errr;
+	if (err) throw err;
 	console.log('API up and running!');
 });
 ```
