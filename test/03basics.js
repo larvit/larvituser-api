@@ -5,6 +5,7 @@ const	UserApi	= require(__dirname + '/../index.js'),
 	async	= require('async'),
 	test	= require('tape'),
 	db	= require('larvitdb'),
+	fs	= require('fs'),
 	options = {
 		'amqp': { 'default': 'loopback interface' },
 		'amsync':	{},
@@ -36,7 +37,7 @@ test('Get a response from a controller', function (t) {
 		request('http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port, function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	5595);
+			t.equal(body.length,	fs.readFileSync(__dirname + '/../README.md').toString().length);
 			cb();
 		});
 	});
