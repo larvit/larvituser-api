@@ -2,6 +2,7 @@
 
 const	topLogPrefix	= 'larvituser-api: ./index.js - ',
 	ArgParser	= require('argparse').ArgumentParser,
+	Intercom	= require('larvitamintercom'),
 	userLib	= require('larvituser'),
 	Api	= require('larvitbase-api'),
 	log	= require('winston'),
@@ -20,6 +21,8 @@ parser.addArgument(['-p', '--password'], {'help': 'password'});
 parser.addArgument(['-port', '--port'], {'help': '3306'});
 parser.addArgument(['-db', '--database'], {'help': 'database_name'});
 parser.addArgument(['-amqp', '--amqp'], {'help': 'amqp://username:password@127.0.0.1'});
+parser.addArgument(['-m', '--mode'], {'help': 'master/slave/noSync'});
+parser.addArgument(['-hp', '--httpPort'], {'help': '8080'});
 
 function UserApi(options) {
 	const	logPrefix	= topLogPrefix + 'UserApi() - ',
@@ -60,7 +63,12 @@ UserApi.prototype.start = function (cb) {
 		return cb(err);
 	}
 
-	userLib.dataWriter.intercom	= that.options.intercom;
+	if (that.options.intercom) {
+		userLib.dataWriter.intercom = that.options.intercom;
+	} else if (that.options.amqp && that.options.amqp.default) {
+		userLib.dataWriter.intercom = new Intercom(that.options.amqp.default);
+	}
+
 	userLib.dataWriter.mode	= that.options.mode;
 	userLib.options = {
 		'amsync': that.options.amsync
@@ -107,6 +115,13 @@ if (require.main === module) {
 				'recoverableErrors':	['PROTOCOL_CONNECTION_LOST', 'ER_LOCK_DEADLOCK', 'ETIMEDOUT']
 			}
 		};
+
+		if (args.amqp) options.amqp = { 'default': args.amqp };
+
+		if (args.mode) options.mode = args.mode;
+
+		if (args.httpPort) options.lBaseOptions = { 'httpOptions': args.httpPort };
+
 		console.log('Using configuration options from arguments');
 	} else {
 		cd	= __dirname + '/config';
@@ -115,11 +130,11 @@ if (require.main === module) {
 
 	if (cd && fs.existsSync(cd)) {
 		options = {
-			'amsync':	fs.existsSync(__dirname + '/config/amsync.json') ? require(__dirname + '/config/amsync.json') : null,
-			'lBaseOptions':	fs.existsSync(__dirname + '/config/server.json') ? require(__dirname + '/config/server.json') : null,
-			'amqp':	fs.existsSync(__dirname + '/config/amqp.json') ? require(__dirname + '/config/amqp.json') : null,
-			'log':	fs.existsSync(__dirname + '/config/log.json') ? require(__dirname + '/config/log.json') : null,
-			'db':	fs.existsSync(__dirname + '/config/db.json') ? require(__dirname + '/config/db.json') : null
+			'amsync':	fs.existsSync(cd + '/amsync.json') ? require(cd + '/amsync.json') : null,
+			'lBaseOptions':	fs.existsSync(cd + '/server.json') ? require(cd + '/server.json') : null,
+			'amqp':	fs.existsSync(cd + '/amqp.json') ? require(cd + '/amqp.json') : null,
+			'log':	fs.existsSync(cd + '/log.json') ? require(cd + '/log.json') : null,
+			'db':	fs.existsSync(cd + '/db.json') ? require(cd + '/db.json') : null
 		};
 
 		if (options.db === null) options = null;
@@ -128,6 +143,11 @@ if (require.main === module) {
 	if (options && options.db) {
 		db.setup(options.db);
 		options.db	= db;
+
+		if (options.amqp && options.amqp.default) {
+			options.intercom = new Intercom(options.amqp.default);
+		}
+
 		api	= new UserApi(options);
 		api.start(function (err) {
 			if (err) throw err;
