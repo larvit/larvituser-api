@@ -44,6 +44,67 @@ node index.js
 
 ## REST API Endpoints
 
+### GET /roles_rights
+
+Fetch roles rights
+
+#### Response example
+
+200 OK
+
+```json
+{
+	"role":	"regex string"
+}
+```
+
+### GET /roles_rights
+
+#### Response example
+
+200 OK
+
+```json
+{
+	"someRole":	"some regex string",
+	"anotherRole":	"with some othe regex string"
+}
+```
+
+### PUT /roles_rights
+
+Create or replace one or more role rights. If a role already exists it will be replaced. If it did not exist, it will be created.
+
+#### Request body example
+
+```json
+{
+	"someRole":	"some regex string",
+	"anotherRole":	"with some othe regex string"
+}
+```
+
+#### Response example on success
+
+204 No Content
+
+### DELETE /roles_rights
+
+Delete one or more roles rights by role.
+
+#### Request body example
+
+```json
+[
+	"firstRoleToBeRemoved",
+	"secondRoleToBeRemoved"
+]
+```
+
+#### Response example on success
+
+204 No Content
+
 ### GET /user
 
 Fetch a specific user
