@@ -39,7 +39,21 @@ exports = module.exports = function (req, res, cb) {
 		}
 
 		users.get(function (err, users) {
+
+			// this should probably be fixed in larvituser instead but is a breaking change
+			if (req.urlParsed.query.returnFields) {
+				for (const user of users) {
+					user.fields = {};
+
+					for (const rf of req.urlParsed.query.returnFields) {
+						user.fields[rf] = user[rf];
+						delete user[rf];
+					}
+				}
+			}
+
 			res.data = users;
+
 			cb(err);
 		});
 	});
