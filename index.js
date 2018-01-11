@@ -142,6 +142,26 @@ if (require.main === module) {
 		if (options.db === null) options = null;
 	}
 
+	if (options && options.log) {
+		// Add support for daily rotate file and elasticsearch
+		log.transports.DailyRotateFile	= require('winston-daily-rotate-file');
+		log.transports.Elasticsearch	= require('winston-elasticsearch');
+
+		// Handle logging from config file
+		log.remove(log.transports.Console);
+		if (options.log !== undefined) {
+			for (const logName of Object.keys(options.log)) {
+				if (typeof options.log[logName] !== Array) {
+					options.log[logName] = [options.log[logName]];
+				}
+
+				for (let i = 0; options.log[logName][i] !== undefined; i ++) {
+					log.add(log.transports[logName], options.log[logName][i]);
+				}
+			}
+		}
+	}
+
 	if (options && options.db) {
 		db.setup(options.db);
 		options.db	= db;
