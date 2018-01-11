@@ -212,8 +212,8 @@ test('Get users by query', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length, 1);
-			t.equal(body[0].username, 'user-1');
+			t.equal(body.length,	1);
+			t.equal(body[0].username,	'user-1');
 
 			cb();
 		});

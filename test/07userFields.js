@@ -60,12 +60,27 @@ test('GET user field names', function (t) {
 				t.equal(localRecord.name,	remoteRecord.name);
 			}
 
-			t.end();
+			cb();
 		});
 	});
 
 	async.series(tasks, function (err) {
 		if (err) throw err;
+		t.end();
+	});
+});
+
+test('Invalid method', function (t) {
+	const	reqOptions	= {};
+
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user/fields';
+	reqOptions.method	= 'DELETE';
+
+	request(reqOptions, function (err, response) {
+		if (err) return cb(err);
+
+		t.equal(response.statusCode,	405);
+
 		t.end();
 	});
 });

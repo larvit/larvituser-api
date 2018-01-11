@@ -94,6 +94,83 @@ test('PUT several rights', function (t) {
 	});
 });
 
+test('PUT invalid bodies', function (t) {
+	const	tasks	= [];
+
+	// Sending in a non-array
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'PUT';
+		reqOptions.json	= true;
+		reqOptions.body	= {'bolli': 'bompa'};
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	400);
+			cb();
+		});
+	});
+
+	// Sending in an array with invalid objects
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'PUT';
+		reqOptions.json	= true;
+		reqOptions.body	= [{'bolli': 'bompa', 'igen': 'hihi'}];
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	400);
+			cb();
+		});
+	});
+
+	// Sending in an array with invalid key
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'PUT';
+		reqOptions.json	= true;
+		reqOptions.body	= [{'  ': 'bompa'}];
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	422);
+			cb();
+		});
+	});
+
+	// Sending in an array with invalid regex
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'PUT';
+		reqOptions.json	= true;
+		reqOptions.body	= [{'dde': ')'}];
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	422);
+			cb();
+		});
+	});
+
+	async.parallel(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
 test('DELETE one role right', function (t) {
 	const	tasks	= [];
 
@@ -198,6 +275,66 @@ test('DELETE two roles rights', function (t) {
 	});
 });
 
+test('DELETE invalid bodies', function (t) {
+	const	tasks	= [];
+
+	// Sending in a non-array
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'DELETE';
+		reqOptions.json	= true;
+		reqOptions.body	= {'bolli': 'bompa'};
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	400);
+			cb();
+		});
+	});
+
+	// Sending in an array with invalid objects
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'DELETE';
+		reqOptions.json	= true;
+		reqOptions.body	= [{'bolli': 'bompa', 'igen': 'hihi'}];
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	400);
+			cb();
+		});
+	});
+
+	// Sending in an array with invalid key
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.method	= 'DELETE';
+		reqOptions.json	= true;
+		reqOptions.body	= [{'  ': 'bompa'}];
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	422);
+			cb();
+		});
+	});
+
+	async.parallel(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
 test('GET roles rights', function (t) {
 	const	tasks	= [];
 
@@ -230,6 +367,20 @@ test('GET roles rights', function (t) {
 
 	async.series(tasks, function (err) {
 		if (err) throw err;
+		t.end();
+	});
+});
+
+test('Invalid method', function (t) {
+	const	reqOptions	= {};
+
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+	reqOptions.method	= 'POST';
+
+	request(reqOptions, function (err, response) {
+		if (err) return cb(err);
+
+		t.equal(response.statusCode,	405);
 		t.end();
 	});
 });
