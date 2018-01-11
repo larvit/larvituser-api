@@ -1,6 +1,6 @@
 'use strict';
 
-const	topLogPrefix	= 'larvituser-api: ./index.js - ',
+const	topLogPrefix	= 'larvituser-api: ' + __filename + ' - ',
 	ArgParser	= require('argparse').ArgumentParser,
 	Intercom	= require('larvitamintercom'),
 	userLib	= require('larvituser'),
@@ -12,6 +12,8 @@ const	topLogPrefix	= 'larvituser-api: ./index.js - ',
 		'addHelp':	false, // -h was reserved for help so had to disable :/
 		'description':	'Larvituser-api example'
 	});
+
+log.appLogPrefix	= 'larvituser-api: ';
 
 parser.addArgument(['-cd', '--configDir'], {'help': '/path/to/dir/with/config/files'});
 parser.addArgument(['-h', '--host'], {'help': '127.0.0.1'});

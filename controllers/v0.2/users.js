@@ -1,6 +1,6 @@
 'use strict';
 
-const topLogPrefix = 'larvituser-api ./controllers/api/v0.1/users.js - ',
+const	topLogPrefix	= require('winston').appLogPrefix + __filename + ' - ',
 	userLib	= require('larvituser'),
 	async = require('async'),
 	log	= require('winston');

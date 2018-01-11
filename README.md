@@ -46,29 +46,16 @@ node index.js
 
 ### GET /roles_rights
 
-Fetch roles rights
-
 #### Response example
 
 200 OK
 
 ```json
-{
-	"role":	"regex string"
-}
-```
-
-### GET /roles_rights
-
-#### Response example
-
-200 OK
-
-```json
-{
-	"someRole":	"some regex string",
-	"anotherRole":	"with some othe regex string"
-}
+[
+	{"someRole":	"some regex string"},
+	{"someRole":	"another regex string for the same role"},
+	{"anotherRole":	"with some othe regex string"}
+]
 ```
 
 ### PUT /roles_rights
@@ -78,10 +65,10 @@ Create or replace one or more role rights. If a role already exists it will be r
 #### Request body example
 
 ```json
-{
-	"someRole":	"some regex string",
-	"anotherRole":	"with some othe regex string"
-}
+[
+	{"someRole":	"some regex string"},
+	{"anotherRole":	"with some othe regex string"}
+]
 ```
 
 #### Response example on success
@@ -90,14 +77,14 @@ Create or replace one or more role rights. If a role already exists it will be r
 
 ### DELETE /roles_rights
 
-Delete one or more roles rights by role.
+Delete one or more roles rights by role and regex string.
 
 #### Request body example
 
 ```json
 [
-	"firstRoleToBeRemoved",
-	"secondRoleToBeRemoved"
+	{"firstRoleToBeRemoved":	"firstRolesRegex"},
+	{"secondRoleToBeRemoved":	"secondRolesRegex"}
 ]
 ```
 

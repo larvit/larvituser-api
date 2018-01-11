@@ -1,153 +1,131 @@
 'use strict';
 
-const topLogPrefix = 'larvituser-api: ./controllers/api/v0.3/roles_rights.js - ',
-	userLib	= require('larvituser'),
-	lUtils	= require('larvitutils'),
+const	topLogPrefix	= require('winston').appLogPrefix + __filename + ' - ',
 	async	= require('async'),
 	log	= require('winston'),
 	db	= require('larvitdb');
 
 function createOrReplaceRight(req, res, cb) {
-	const	tasks	= [];
+	const	dbFields	= [],
+		tasks	= [];
 
 	let	logPrefix	= topLogPrefix	+ 'createOrReplaceRight() - ',
-		user;
+		sql	= 'REPLACE INTO user_roles_rights (role, uri) VALUES';
 
 	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
 
-	res.statusCode	= 200;
+	res.statusCode	= 204;
 
-	// Check uuid for validity
-	if (req.jsonBody.uuid) {
-		req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
-
-		if (req.jsonBody.uuid === false) {
-			res.statusCode	= 400;
-			res.data	= 'Bad Request\nProvided uuid has an invalid format';
-			return cb();
-		}
-	}
-
-	// Check so username is a valid string
-	if ( ! req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
+	if ( ! Array.isArray(req.jsonBody)) {
 		res.statusCode	= 400;
-		res.data	= 'Bad Request\nNo username provided';
+		res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is not an array';
 		return cb();
 	}
 
-	req.jsonBody.username	= String(req.jsonBody.username).trim();
-
-	if (req.jsonBody.username.length > 191) {
-		res.statusCode	= 422;
-		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
-		return cb();
-	}
-
-	// Check if user exists on given uuid, otherwise create it
-	if (req.jsonBody.uuid) {
-		logPrefix += 'userUuid: ' + req.jsonBody.uuid + ' - ';
-
-		tasks.push(function (cb) {
-			log.debug(logPrefix + 'Trying to load previous user');
-			userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
-				if (err) return cb(err);
-
-				if (result) {
-					log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
-					user	= result;
-				}
-				cb();
-			});
-		});
-	}
-
-	// Check username availibility
-	tasks.push(function (cb) {
-		if (user && user.username === req.jsonBody.username) {
-			log.debug(logPrefix + 'Previous user loaded and username change is not requested, moving on');
+	for (let i = 0; req.jsonBody[i] !== undefined; i ++) {
+		if (Object.keys(req.jsonBody[i]).length !== 1) {
+			res.statusCode	= 400;
+			res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is an array, but one or more objects does not match the criteria';
 			return cb();
 		}
 
-		userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
-			if (err) return cb(err);
+		for (const keyName of Object.keys(req.jsonBody[i])) {
+			const	curValue	= req.jsonBody[i][keyName];
 
-			if ( ! result) {
-				log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
+			// Check indata integrity
+			if (keyName.trim().length === 0) {
 				res.statusCode	= 422;
-				res.data	= 'Unprocessable Entity\nUsername is taken by another user';
+				res.data	= 'Unprocessable Entity\nRole must not be an empty string after whitespaces have been trimmed';
 				return cb();
 			}
 
-			log.debug(logPrefix + 'Username is available, moving on');
+			try {
+				new RegExp(curValue);
+			} catch (err) {
+				res.statusCode	= 422;
+				res.data	= 'Unprocessable Entity\nThe string "' + curValue + '" is not a valid regExp expression';
+				return cb();
+			}
 
-			cb();
-		});
-	});
-
-	// Create new user if needed
-	tasks.push(function (cb) {
-		if (user || res.statusCode !== 200) return cb();
-
-		userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
-			if (err) return cb(err);
-			user	= result;
-			log.debug(logPrefix + 'New user created');
-			cb();
-		});
-	});
-
-	// Set username if it has changed
-	tasks.push(function (cb) {
-		if ((user && user.username === req.jsonBody.username) || res.statusCode !== 200) {
-			return cb();
+			sql += '(?,?),';
+			dbFields.push(keyName.trim());
+			dbFields.push(curValue);
 		}
+	}
 
-		user.setUsername(req.jsonBody.username, cb);
-	});
-
-	// Set fields
-	tasks.push(function (cb) {
-		if (res.statusCode !== 200) return cb();
-
-		user.replaceFields(req.jsonBody.fields, function (err) {
-			if (err) return cb(err);
-			log.debug(logPrefix + 'Fields replaced');
-			cb();
+	if (dbFields.length) {
+		tasks.push(function (cb) {
+			sql	= sql.substring(0, sql.length - 1);
+			db.query(sql, dbFields, cb);
 		});
-	});
+	}
 
-	async.series(tasks, function (err) {
-		if (err) return cb(err);
-		if (res.statusCode === 200) res.data	= user;
-		cb();
-	});
+	async.series(tasks, cb);
 }
 
 function deleteRight(req, res, cb) {
-	// Check uuid for validity
-	req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
+	const	dbFields	= [],
+		tasks	= [];
 
-	if (req.jsonBody.uuid === false) {
+	let	logPrefix	= topLogPrefix	+ 'deleteRight() - ',
+		sql	= 'DELETE FROM user_roles_rights WHERE 1 = 2 OR';
+
+	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
+
+	res.statusCode	= 204;
+
+	if ( ! Array.isArray(req.jsonBody)) {
 		res.statusCode	= 400;
-		res.data	= 'Bad Request\nProvided uuid has an invalid format';
+		res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is not an array';
 		return cb();
 	}
 
-	userLib.rmUser(req.urlParsed.query.uuid, function (err) {
-		if (err) return cb(err);
-		res.data	= 'acknowledged';
-		cb();
-	});
+	for (let i = 0; req.jsonBody[i] !== undefined; i ++) {
+		if (Object.keys(req.jsonBody[i]).length !== 1) {
+			res.statusCode	= 400;
+			res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is an array, but one or more objects does not match the criteria';
+			return cb();
+		}
+
+		for (const keyName of Object.keys(req.jsonBody[i])) {
+			const	curValue	= req.jsonBody[i][keyName];
+
+			// Check indata integrity
+			if (keyName.trim().length === 0) {
+				res.statusCode	= 422;
+				res.data	= 'Unprocessable Entity\nRole must not be an empty string after whitespaces have been trimmed';
+				return cb();
+			}
+
+			sql += ' (role = ? AND uri = ?) OR';
+			dbFields.push(keyName.trim());
+			dbFields.push(curValue);
+		}
+	}
+
+	if (dbFields.length) {
+		tasks.push(function (cb) {
+			sql	= sql.substring(0, sql.length - 3);
+			db.query(sql, dbFields, cb);
+		});
+	}
+
+	async.series(tasks, cb);
 }
 
 function getRolesRights(req, res, cb) {
 	db.query('SELECT * FROM user_roles_rights ORDER BY role', function (err, rows) {
 		if (err) return cb(err);
 
-		for (let i = 0; rows[i] !== undefined; i ++) {
-			const	row	= rows[i];
+		res.data	= [];
 
-			res.body[row.role]	= row.uri;
+		for (let i = 0; rows[i] !== undefined; i ++) {
+			const	bodyPart	= {},
+				row	= rows[i];
+
+			bodyPart[row.role]	= row.uri;
+
+			res.data.push(bodyPart);
 		}
 
 		cb();
