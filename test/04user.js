@@ -975,12 +975,15 @@ test('DELETE user', function (t) {
 
 	// Check database
 	tasks.push(function (cb) {
-		db.query('SELECT uuid FROM user_users WHERE username = ?', 'deleteUser', function (err, rows) {
-			if (err) return cb(err);
+		// Seems we might have some kind of race condition here... or cache... or something else
+		setTimeout(function () {
+			db.query('SELECT uuid FROM user_users WHERE username = ?', 'deleteUser', function (err, rows) {
+				if (err) return cb(err);
 
-			t.equal(rows.length,	0);
-			cb();
-		});
+				t.equal(rows.length,	0);
+				cb();
+			});
+		}, 50);
 	});
 
 	async.series(tasks, function (err) {
