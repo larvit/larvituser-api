@@ -38,6 +38,14 @@ function UserApi(options) {
 
 	// Parse all incoming data as JSON
 	that.api.middleware.splice(1, 0, function (req, res, cb) {
+
+		if (req.method.toUpperCase() !== 'GET' && req.rawBody === undefined) {
+			res.statusCode	= 400;
+			res.end('"Bad Request\nNo body provided"');
+			log.verbose(logPrefix + 'No body provided.');
+			return;
+		}
+
 		if (req.rawBody) {
 			try {
 				req.jsonBody	= JSON.parse(req.rawBody.toString());

@@ -28,6 +28,7 @@ test('Only allow GET', function (t) {
 	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users';
 	reqOptions.method	= 'POST';
 	reqOptions.json	= true;
+	reqOptions.body	= {};
 
 	request(reqOptions, function (err, response, body) {
 		if (err) return cb(err);

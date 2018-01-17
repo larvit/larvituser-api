@@ -75,6 +75,8 @@ test('Invalid method', function (t) {
 
 	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user/fields';
 	reqOptions.method	= 'DELETE';
+	reqOptions.json	= true;
+	reqOptions.body	= {};
 
 	request(reqOptions, function (err, response) {
 		if (err) return cb(err);

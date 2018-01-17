@@ -357,6 +357,22 @@ test('PUT user, update user but not username', function (t) {
 	});
 });
 
+test('PUT without body', function (t) {
+	const	reqOptions	= {};
+
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+	reqOptions.method	= 'PUT';
+	reqOptions.json	= true;
+
+	request(reqOptions, function (err, response, body) {
+		if (err) return cb(err);
+
+		t.equal(response.statusCode,	400);
+		console.log(body);
+		t.end();
+	});
+});
+
 test('GET user, malformed statements', function (t) {
 	const	tasks	= [];
 

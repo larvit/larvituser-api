@@ -376,9 +376,11 @@ test('Invalid method', function (t) {
 
 	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
 	reqOptions.method	= 'POST';
+	reqOptions.body = { 'asdfa': 'asdfa' };
+	reqOptions.json = true;
 
 	request(reqOptions, function (err, response) {
-		if (err) return cb(err);
+		if (err) throw err;
 
 		t.equal(response.statusCode,	405);
 		t.end();
