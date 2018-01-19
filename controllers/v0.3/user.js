@@ -91,7 +91,7 @@ function createOrReplaceUser(req, res, cb) {
 			if (err) return cb(err);
 			user	= result;
 			log.debug(logPrefix + 'New user created');
-			cb();
+			cb('ok');
 		});
 	});
 
@@ -116,7 +116,7 @@ function createOrReplaceUser(req, res, cb) {
 	});
 
 	async.series(tasks, function (err) {
-		if (err) return cb(err);
+		if (err && err !== 'ok') return cb(err);
 		if (res.statusCode === 200) res.data	= user;
 		cb();
 	});
