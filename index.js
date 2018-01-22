@@ -26,6 +26,24 @@ parser.addArgument(['-amqp', '--amqp'], {'help': 'amqp://username:password@127.0
 parser.addArgument(['-m', '--mode'], {'help': 'master/slave/noSync'});
 parser.addArgument(['-hp', '--httpPort'], {'help': '8080'});
 
+// https://github.com/uxitten/polyfill/blob/master/string.polyfill.js
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
+if ( ! String.prototype.padStart) {
+	String.prototype.padStart = function padStart(targetLength, padString) {
+		targetLength	= targetLength >> 0; // Truncate if number or convert non-number to 0;
+		padString	= String((typeof padString !== 'undefined' ? padString : ' '));
+		if (this.length > targetLength) {
+			return String(this);
+		} else {
+			targetLength	= targetLength - this.length;
+			if (targetLength > padString.length) {
+				padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
+			}
+			return padString.slice(0, targetLength) + String(this);
+		}
+	};
+}
+
 function UserApi(options) {
 	const	logPrefix	= topLogPrefix + 'UserApi() - ',
 		that	= this;
