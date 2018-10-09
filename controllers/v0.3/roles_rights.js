@@ -1,24 +1,20 @@
 'use strict';
-
-const	topLogPrefix	= require('winston').appLogPrefix + __filename + ' - ',
-	async	= require('async'),
-	log	= require('winston'),
-	db	= require('larvitdb');
+const async	= require('async');
 
 function createOrReplaceRight(req, res, cb) {
-	const	dbFields	= [],
-		tasks	= [];
+	const	dbFields	= [];
+	const tasks	= [];
+	const logPrefix	= req.log.appLogPrefix + __filename + ' - createOrReplaceRight() - ';
+	let sql	= 'REPLACE INTO user_roles_rights (role, uri) VALUES';
 
-	let	logPrefix	= topLogPrefix	+ 'createOrReplaceRight() - ',
-		sql	= 'REPLACE INTO user_roles_rights (role, uri) VALUES';
-
-	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
+	req.log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
 
 	res.statusCode	= 204;
 
-	if ( ! Array.isArray(req.jsonBody)) {
+	if (! Array.isArray(req.jsonBody)) {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is not an array';
+
 		return cb();
 	}
 
@@ -26,6 +22,7 @@ function createOrReplaceRight(req, res, cb) {
 		if (Object.keys(req.jsonBody[i]).length !== 1) {
 			res.statusCode	= 400;
 			res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is an array, but one or more objects does not match the criteria';
+
 			return cb();
 		}
 
@@ -36,14 +33,17 @@ function createOrReplaceRight(req, res, cb) {
 			if (keyName.trim().length === 0) {
 				res.statusCode	= 422;
 				res.data	= 'Unprocessable Entity\nRole must not be an empty string after whitespaces have been trimmed';
+
 				return cb();
 			}
 
 			try {
 				new RegExp(curValue);
 			} catch (err) {
+				req.log.silly(logPrefix + 'Regex failed: ' + err.message); // Log this so we dont get a lint error here for not using the err 
 				res.statusCode	= 422;
 				res.data	= 'Unprocessable Entity\nThe string "' + curValue + '" is not a valid regExp expression';
+
 				return cb();
 			}
 
@@ -56,7 +56,7 @@ function createOrReplaceRight(req, res, cb) {
 	if (dbFields.length) {
 		tasks.push(function (cb) {
 			sql	= sql.substring(0, sql.length - 1);
-			db.query(sql, dbFields, cb);
+			req.db.query(sql, dbFields, cb);
 		});
 	}
 
@@ -64,19 +64,20 @@ function createOrReplaceRight(req, res, cb) {
 }
 
 function deleteRight(req, res, cb) {
-	const	dbFields	= [],
-		tasks	= [];
+	const	dbFields	= [];
+	const tasks	= [];
+	const logPrefix	= req.log.appLogPrefix + __filename + ' - deleteRight() - ';
 
-	let	logPrefix	= topLogPrefix	+ 'deleteRight() - ',
-		sql	= 'DELETE FROM user_roles_rights WHERE 1 = 2 OR';
+	let sql	= 'DELETE FROM user_roles_rights WHERE 1 = 2 OR';
 
-	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
+	req.log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
 
 	res.statusCode	= 204;
 
-	if ( ! Array.isArray(req.jsonBody)) {
+	if (! Array.isArray(req.jsonBody)) {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is not an array';
+
 		return cb();
 	}
 
@@ -84,6 +85,7 @@ function deleteRight(req, res, cb) {
 		if (Object.keys(req.jsonBody[i]).length !== 1) {
 			res.statusCode	= 400;
 			res.data	= 'Bad Request\nBody must be a JSON array of objects where each object is only one key and one value, given body is an array, but one or more objects does not match the criteria';
+
 			return cb();
 		}
 
@@ -94,6 +96,7 @@ function deleteRight(req, res, cb) {
 			if (keyName.trim().length === 0) {
 				res.statusCode	= 422;
 				res.data	= 'Unprocessable Entity\nRole must not be an empty string after whitespaces have been trimmed';
+
 				return cb();
 			}
 
@@ -106,7 +109,7 @@ function deleteRight(req, res, cb) {
 	if (dbFields.length) {
 		tasks.push(function (cb) {
 			sql	= sql.substring(0, sql.length - 3);
-			db.query(sql, dbFields, cb);
+			req.db.query(sql, dbFields, cb);
 		});
 	}
 
@@ -114,14 +117,14 @@ function deleteRight(req, res, cb) {
 }
 
 function getRolesRights(req, res, cb) {
-	db.query('SELECT * FROM user_roles_rights ORDER BY role', function (err, rows) {
+	req.db.query('SELECT * FROM user_roles_rights ORDER BY role', function (err, rows) {
 		if (err) return cb(err);
 
 		res.data	= [];
 
 		for (let i = 0; rows[i] !== undefined; i ++) {
-			const	bodyPart	= {},
-				row	= rows[i];
+			const	bodyPart	= {};
+			const row	= rows[i];
 
 			bodyPart[row.role]	= row.uri;
 

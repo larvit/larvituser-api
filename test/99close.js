@@ -1,8 +1,8 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	test	= require('tape'),
-	db	= require('larvitdb');
+const	UserApi	= require(__dirname + '/../index.js');
+const test	= require('tape');
+const db	= require('larvitdb');
 
 test('Close API and clean db', function (t) {
 	UserApi.instance.stop(function (err) {

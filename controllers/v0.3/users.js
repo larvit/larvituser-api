@@ -1,25 +1,29 @@
 'use strict';
 
-const	topLogPrefix	= require('winston').appLogPrefix + __filename + ' - ',
-	userLib	= require('larvituser'),
-	async = require('async'),
-	log	= require('winston');
+const async = require('async');
+const UserLib = require('larvituser');
 
 exports = module.exports = function (req, res, cb) {
 	const	tasks = [];
+	const topLogPrefix = req.log.appLogPrefix + __filename + ' - ';
 
 	if (req.method.toUpperCase() !== 'GET') {
-		log.info(topLogPrefix + 'Got request with unallowed method: "' + req.method + '", query: "' + req.urlParsed.href + '"');
+		req.log.info(topLogPrefix + 'Got request with unallowed method: "' + req.method + '", query: "' + req.urlParsed.href + '"');
 		res.setHeader('Content-Type', 'text/plain');
 		res.statusCode	= 405;
 		res.data = '"Method not allowed"';
+
 		return cb();
 	}
 
-	log.verbose(topLogPrefix + 'Got request for users with query "' + req.urlParsed.href + '"');
+	req.log.verbose(topLogPrefix + 'Got request for users with query "' + req.urlParsed.href + '"');
 
 	tasks.push(function (cb) {
-		const users = new userLib.Users();
+		const users = new UserLib.Users({
+			'db': req.db,
+			'log': req.log
+		});
+
 		users.q	= req.urlParsed.query.q;
 		users.uuids	= req.urlParsed.query.uuids;
 		users.limit	= req.urlParsed.query.limit;
@@ -39,8 +43,7 @@ exports = module.exports = function (req, res, cb) {
 		}
 
 		users.get(function (err, users) {
-
-			// this should probably be fixed in larvituser instead but is a breaking change
+			// This should probably be fixed in larvituser instead but is a breaking change
 			if (req.urlParsed.query.returnFields) {
 				for (const user of users) {
 					user.fields = {};

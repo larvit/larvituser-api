@@ -1,18 +1,18 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	userLib	= require('larvituser'),
-	request	= require('request'),
-	uuidv1	= require('uuid/v1'),
-	lUtils	=	require('larvitutils'),
-	async	= require('async'),
-	test	= require('tape'),
-	db	= require('larvitdb');
+const	UserApi	= require(__dirname + '/../index.js');
+const UserLib	= require('larvituser');
+const request	= require('request');
+const uuidv1	= require('uuid/v1');
+const lUtils	=	new (require('larvitutils'))();
+const async	= require('async');
+const test	= require('tape');
+const db	= require('larvitdb');
 
 test('Invalid method', function (t) {
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 	reqOptions.method	= 'POST';
 	reqOptions.body	= {};
 	reqOptions.json	= true;
@@ -34,7 +34,7 @@ test('PUT user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= uuidv1();
@@ -57,7 +57,7 @@ test('PUT user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= uuidv1();
@@ -81,7 +81,7 @@ test('PUT user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= 'blurgh';
@@ -114,7 +114,7 @@ test('PUT user, create new', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.username	= 'foo';
@@ -127,7 +127,6 @@ test('PUT user, create new', function (t) {
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
-
 			t.equal(body.username,	'foo');
 			t.equal(lUtils.formatUuid(body.uuid).length,	36);
 			t.equal(body.fields.firstName[0],	'Bosse');
@@ -177,7 +176,7 @@ test('PUT user, create new', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.username	= 'foo';
@@ -204,19 +203,21 @@ test('PUT user, create new', function (t) {
 });
 
 test('PUT user, update user', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+
+
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('putUserUpdate', 'fomme', {'bing': 'bong'}, userUuid, cb);
+		UserLib.instance.create('putUserUpdate', 'fomme', {'bing': 'bong'}, userUuid, cb);
 	});
 
 	// Run request
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= userUuid;
@@ -281,19 +282,21 @@ test('PUT user, update user', function (t) {
 });
 
 test('PUT user, update user but not username', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+
+
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('putUserUpdate_notUsername', 'fomme', {'bing': 'bong'}, userUuid, cb);
+		UserLib.instance.create('putUserUpdate_notUsername', 'fomme', {'bing': 'bong'}, userUuid, cb);
 	});
 
 	// Run request
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PUT';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= userUuid;
@@ -360,15 +363,14 @@ test('PUT user, update user but not username', function (t) {
 test('PUT without body', function (t) {
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 	reqOptions.method	= 'PUT';
 	reqOptions.json	= true;
 
-	request(reqOptions, function (err, response, body) {
+	request(reqOptions, function (err, response) {
 		if (err) return cb(err);
 
 		t.equal(response.statusCode,	400);
-		console.log(body);
 		t.end();
 	});
 });
@@ -380,7 +382,7 @@ test('GET user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + uuidv1() + '&username=blurre';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?uuid=' + uuidv1() + '&username=blurre';
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -397,7 +399,7 @@ test('GET user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -414,7 +416,7 @@ test('GET user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=bleh';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?uuid=bleh';
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -431,7 +433,7 @@ test('GET user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + uuidv1();
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?uuid=' + uuidv1();
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -451,19 +453,21 @@ test('GET user, malformed statements', function (t) {
 });
 
 test('GET user', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+
+
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('getUser', 'stolle', {'baj': 'en'}, userUuid, cb);
+		UserLib.instance.create('getUser', 'stolle', {'baj': 'en'}, userUuid, cb);
 	});
 
 	// Get by uuid
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + userUuid;
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?uuid=' + userUuid;
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -484,7 +488,7 @@ test('GET user', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?username=getuser';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?username=getuser';
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -505,7 +509,7 @@ test('GET user', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?uuid=' + uuidv1();
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?uuid=' + uuidv1();
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -522,7 +526,7 @@ test('GET user', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user?username=' + uuidv1();
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user?username=' + uuidv1();
 		reqOptions.json	= true;
 
 		request(reqOptions, function (err, response, body) {
@@ -548,7 +552,7 @@ test('PATCH user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.fields	= {};
@@ -570,7 +574,7 @@ test('PATCH user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= uuidv1();
@@ -591,7 +595,7 @@ test('PATCH user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= uuidv1();
@@ -612,7 +616,7 @@ test('PATCH user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= 'bork';
@@ -635,17 +639,17 @@ test('PATCH user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	username	= uuidv1();
 
-		userLib.create(username, 'foo', {'bar': 'baz'}, function (err, firstUser) {
+		UserLib.instance.create(username, 'foo', {'bar': 'baz'}, function (err, firstUser) {
 			if (err) return cb(err);
 
-			userLib.create(uuidv1(), 'foo', {'bar': 'baz'}, function (err, secondUser) {
+			UserLib.instance.create(uuidv1(), 'foo', {'bar': 'baz'}, function (err, secondUser) {
 				const	reqOptions	= {};
 
 				if (err) return cb(err);
 
 				t.notEqual(firstUser.uuid,	secondUser.uuid);
 
-				reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+				reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 				reqOptions.method	= 'PATCH';
 				reqOptions.body	= {};
 				reqOptions.body.uuid	= secondUser.uuid;
@@ -668,7 +672,7 @@ test('PATCH user, malformed statements', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= uuidv1();
@@ -694,19 +698,21 @@ test('PATCH user, malformed statements', function (t) {
 });
 
 test('PATCH user - fields', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+
+
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('patchUser', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
+		UserLib.instance.create('patchUser', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
 	});
 
 	// Run request
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= userUuid;
@@ -779,19 +785,21 @@ test('PATCH user - fields', function (t) {
 });
 
 test('PATCH user - username', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+
+
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('patchUser_username', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
+		UserLib.instance.create('patchUser_username', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
 	});
 
 	// Run request
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= userUuid;
@@ -856,19 +864,21 @@ test('PATCH user - username', function (t) {
 });
 
 test('PATCH user - username and fields', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+
+
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('patchUser_username_and_fields', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
+		UserLib.instance.create('patchUser_username_and_fields', 'dkfalls', {'bing': 'bong', 'palt': 'koma'}, userUuid, cb);
 	});
 
 	// Run request
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'PATCH';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= userUuid;
@@ -944,7 +954,7 @@ test('DELETE USER, malformed statements', function (t) {
 	// Malformed request, invalid uuid
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 	reqOptions.method	= 'DELETE';
 	reqOptions.body	= {};
 	reqOptions.body.uuid	= 'blurgh';
@@ -961,19 +971,19 @@ test('DELETE USER, malformed statements', function (t) {
 });
 
 test('DELETE user', function (t) {
-	const	userUuid	= uuidv1(),
-		tasks	= [];
+	const	userUuid	= uuidv1();
+	const tasks	= [];
 
 	// Create user
 	tasks.push(function (cb) {
-		userLib.create('deleteUser', 'stolle', {'weng': 'wong'}, userUuid, cb);
+		UserLib.instance.create('deleteUser', 'stolle', {'weng': 'wong'}, userUuid, cb);
 	});
 
 	// Delete
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 		reqOptions.method	= 'DELETE';
 		reqOptions.body	= {};
 		reqOptions.body.uuid	= userUuid;

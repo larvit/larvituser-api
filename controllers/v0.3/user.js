@@ -1,18 +1,13 @@
 'use strict';
-
-const	topLogPrefix	= require('winston').appLogPrefix + __filename + ' - ',
-	userLib	= require('larvituser'),
-	lUtils	= require('larvitutils'),
-	async	= require('async'),
-	log	= require('winston');
+const lUtils	= new (require('larvitutils'))();
+const async	= require('async');
 
 function createOrReplaceUser(req, res, cb) {
 	const	tasks	= [];
+	let	logPrefix	= req.log.appLogPrefix + __filename + ' - createOrReplaceUser() - ';
+	let user;
 
-	let	logPrefix	= topLogPrefix	+ 'createOrReplaceUser() - ',
-		user;
-
-	log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
+	req.log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
 
 	res.statusCode	= 200;
 
@@ -23,14 +18,16 @@ function createOrReplaceUser(req, res, cb) {
 		if (req.jsonBody.uuid === false) {
 			res.statusCode	= 400;
 			res.data	= 'Bad Request\nProvided uuid has an invalid format';
+
 			return cb();
 		}
 	}
 
 	// Check so username is a valid string
-	if ( ! req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
+	if (! req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nNo username provided';
+
 		return cb();
 	}
 
@@ -39,6 +36,7 @@ function createOrReplaceUser(req, res, cb) {
 	if (req.jsonBody.username.length > 191) {
 		res.statusCode	= 422;
 		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
+
 		return cb();
 	}
 
@@ -47,12 +45,12 @@ function createOrReplaceUser(req, res, cb) {
 		logPrefix += 'userUuid: ' + req.jsonBody.uuid + ' - ';
 
 		tasks.push(function (cb) {
-			log.debug(logPrefix + 'Trying to load previous user');
-			userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
+			req.log.debug(logPrefix + 'Trying to load previous user');
+			req.userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
 				if (err) return cb(err);
 
 				if (result) {
-					log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
+					req.log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
 					user	= result;
 				}
 				cb();
@@ -63,21 +61,23 @@ function createOrReplaceUser(req, res, cb) {
 	// Check username availibility
 	tasks.push(function (cb) {
 		if (user && user.username === req.jsonBody.username) {
-			log.debug(logPrefix + 'Previous user loaded and username change is not requested, moving on');
+			req.log.debug(logPrefix + 'Previous user loaded and username change is not requested, moving on');
+
 			return cb();
 		}
 
-		userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
+		req.userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
 			if (err) return cb(err);
 
-			if ( ! result) {
-				log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
+			if (! result) {
+				req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
 				res.statusCode	= 422;
 				res.data	= 'Unprocessable Entity\nUsername is taken by another user';
+
 				return cb();
 			}
 
-			log.debug(logPrefix + 'Username is available, moving on');
+			req.log.debug(logPrefix + 'Username is available, moving on');
 
 			cb();
 		});
@@ -87,11 +87,12 @@ function createOrReplaceUser(req, res, cb) {
 	tasks.push(function (cb) {
 		if (user || res.statusCode !== 200) return cb();
 
-		userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
+		req.userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
 			if (err) return cb(err);
 			user	= result;
-			log.debug(logPrefix + 'New user created');
-			cb('ok');
+			req.log.debug(logPrefix + 'New user created');
+
+			cb();
 		});
 	});
 
@@ -101,7 +102,10 @@ function createOrReplaceUser(req, res, cb) {
 			return cb();
 		}
 
-		user.setUsername(req.jsonBody.username, cb);
+		user.setUsername(req.jsonBody.username, function (err) {
+			if (! err) user.username = req.jsonBody.username;
+			cb(err);
+		});
 	});
 
 	// Set fields
@@ -110,14 +114,21 @@ function createOrReplaceUser(req, res, cb) {
 
 		user.replaceFields(req.jsonBody.fields, function (err) {
 			if (err) return cb(err);
-			log.debug(logPrefix + 'Fields replaced');
+			req.log.debug(logPrefix + 'Fields replaced');
 			cb();
 		});
 	});
 
 	async.series(tasks, function (err) {
-		if (err && err !== 'ok') return cb(err);
-		if (res.statusCode === 200) res.data	= user;
+		if (err) return cb(err);
+		if (res.statusCode === 200) {
+			res.data = {
+				'fields': user.fields,
+				'uuid': user.uuid,
+				'username': user.username,
+				'passwordIsFalse': user.passwordIsFalse
+			};
+		}
 		cb();
 	});
 }
@@ -129,10 +140,11 @@ function deleteUser(req, res, cb) {
 	if (req.jsonBody.uuid === false) {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nProvided uuid has an invalid format';
+
 		return cb();
 	}
 
-	userLib.rmUser(req.urlParsed.query.uuid, function (err) {
+	req.userLib.rmUser(req.jsonBody.uuid, function (err) {
 		if (err) return cb(err);
 		res.data	= 'acknowledged';
 		cb();
@@ -143,10 +155,12 @@ function getUser(req, res, cb) {
 	if (req.urlParsed.query.uuid && req.urlParsed.query.username) {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nOnly one of uuid and username is allowed at every single request';
+
 		return cb();
-	} else if ( ! req.urlParsed.query.uuid && ! req.urlParsed.query.username) {
+	} else if (! req.urlParsed.query.uuid && ! req.urlParsed.query.username) {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nURL parameters uuid or username is required';
+
 		return cb();
 	}
 
@@ -157,44 +171,59 @@ function getUser(req, res, cb) {
 		if (req.urlParsed.query.uuid === false) {
 			res.statusCode	= 400;
 			res.data	= 'Bad Request\nProvided uuid has an invalid format';
+
 			return cb();
 		}
 
 		// Fetch user
-		userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
+		req.userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
 			if (err) return cb(err);
 
-			if ( ! user) {
+			if (! user) {
 				res.statusCode	= 404;
 				res.data	= 'Not Found';
+
 				return cb();
 			}
 
-			res.data	= user;
+			res.data = {
+				'fields': user.fields,
+				'uuid': user.uuid,
+				'username': user.username,
+				'passwordIsFalse': user.passwordIsFalse
+			};
+
 			cb();
 		});
 	} else if (req.urlParsed.query.username) {
 		req.urlParsed.query.username	= String(req.urlParsed.query.username);
 
 		// Fetch user
-		userLib.fromUsername(req.urlParsed.query.username, function (err, user) {
+		req.userLib.fromUsername(req.urlParsed.query.username, function (err, user) {
 			if (err) return cb(err);
 
-			if ( ! user) {
+			if (! user) {
 				res.statusCode	= 404;
 				res.data	= 'Not Found';
+
 				return cb();
 			}
 
-			res.data	= user;
+			res.data = {
+				'fields': user.fields,
+				'uuid': user.uuid,
+				'username': user.username,
+				'passwordIsFalse': user.passwordIsFalse
+			};
+
 			cb();
 		});
 	}
 }
 
 function patchUser(req, res, cb) {
-	const	logPrefix	 = topLogPrefix + 'patchUser() - ',
-		tasks	= [];
+	const	logPrefix	= req.log.appLogPrefix + __filename + ' - patchUser() - ';
+	const tasks	= [];
 
 	let	user;
 
@@ -206,6 +235,7 @@ function patchUser(req, res, cb) {
 	if (req.jsonBody.uuid === false) {
 		res.statusCode	= 400;
 		res.data	= 'Bad Request\nProvided uuid has an invalid format';
+
 		return cb();
 	}
 
@@ -213,6 +243,7 @@ function patchUser(req, res, cb) {
 	if (req.jsonBody.username && req.jsonBody.username.length > 191) {
 		res.statusCode	= 422;
 		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
+
 		return cb();
 	}
 
@@ -223,13 +254,14 @@ function patchUser(req, res, cb) {
 		if (req.jsonBody.username === '') {
 			res.statusCode	= 422;
 			res.data	= 'Unprocessable Entity\nUsername must contain at least one non-space character';
+
 			return cb();
 		}
 	}
 
 	// Fetch user
 	tasks.push(function (cb) {
-		userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
+		req.userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
 			if (err) return cb(err);
 			user	= result;
 			cb();
@@ -239,15 +271,15 @@ function patchUser(req, res, cb) {
 	// Check so new username is available
 	// IMPORTANT!!! That this happends before updating fields!
 	tasks.push(function (cb) {
-		if ( ! user || ! req.jsonBody.username || req.jsonBody.username === user.username) {
+		if (! user || ! req.jsonBody.username || req.jsonBody.username === user.username) {
 			return cb();
 		}
 
-		userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
+		req.userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
 			if (err) return cb(err);
 
-			if ( ! result) {
-				log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
+			if (! result) {
+				req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
 				res.statusCode	= 422;
 				res.data	= 'Unprocessable Entity\nUsername is taken by another user';
 			}
@@ -260,7 +292,7 @@ function patchUser(req, res, cb) {
 	tasks.push(function (cb) {
 		const	newFields	= {};
 
-		if ( ! user || ! req.jsonBody.fields || res.statusCode !== 200) return cb();
+		if (! user || ! req.jsonBody.fields || res.statusCode !== 200) return cb();
 
 		for (const fieldName of Object.keys(user.fields)) {
 			newFields[fieldName]	= user.fields[fieldName];
@@ -275,7 +307,7 @@ function patchUser(req, res, cb) {
 
 	// Update username
 	tasks.push(function (cb) {
-		if ( ! user || ! req.jsonBody.username || req.jsonBody.username === user.username || res.statusCode !== 200) {
+		if (! user || ! req.jsonBody.username || req.jsonBody.username === user.username || res.statusCode !== 200) {
 			return cb();
 		}
 
@@ -285,13 +317,18 @@ function patchUser(req, res, cb) {
 	async.series(tasks, function (err) {
 		if (err) return cb(err);
 
-		if ( ! user) {
+		if (! user) {
 			res.statusCode	= 404;
 			res.data	= 'Not Found';
 		}
 
 		if (res.statusCode === 200) {
-			res.data	= user;
+			res.data = {
+				'fields': user.fields,
+				'uuid': user.uuid,
+				'username': user.username,
+				'passwordIsFalse': user.passwordIsFalse
+			};
 		}
 
 		cb();

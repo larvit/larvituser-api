@@ -1,19 +1,17 @@
 'use strict';
 
-const	topLogPrefix	= 'larvituser-api: ' + __filename + ' - ',
-	ArgParser	= require('argparse').ArgumentParser,
-	Intercom	= require('larvitamintercom'),
-	userLib	= require('larvituser'),
-	Api	= require('larvitbase-api'),
-	log	= require('winston'),
-	fs	= require('fs'),
-	db	= require('larvitdb'),
-	parser = new ArgParser({
-		'addHelp':	false, // -h was reserved for help so had to disable :/
-		'description':	'Larvituser-api example'
-	});
-
-log.appLogPrefix	= 'larvituser-api: ';
+const	topLogPrefix	= 'larvituser-api: ' + __filename + ' - ';
+const ArgParser	= require('argparse').ArgumentParser;
+const Intercom	= require('larvitamintercom');
+const UserLib	= require('larvituser');
+const lUtils	= new (require('larvitutils'))();
+const Api	= require('larvitbase-api');
+const fs	= require('fs');
+const db	= require('larvitdb');
+const parser = new ArgParser({
+	'addHelp':	false, // -h was reserved for help so had to disable :/
+	'description':	'Larvituser-api example'
+});
 
 parser.addArgument(['-cd', '--configDir'], {'help': '/path/to/dir/with/config/files'});
 parser.addArgument(['-h', '--host'], {'help': '127.0.0.1'});
@@ -28,7 +26,7 @@ parser.addArgument(['-hp', '--httpPort'], {'help': '8080'});
 
 // https://github.com/uxitten/polyfill/blob/master/string.polyfill.js
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
-if ( ! String.prototype.padStart) {
+if (! String.prototype.padStart) {
 	String.prototype.padStart = function padStart(targetLength, padString) {
 		targetLength	= targetLength >> 0; // Truncate if number or convert non-number to 0;
 		padString	= String((typeof padString !== 'undefined' ? padString : ' '));
@@ -37,30 +35,40 @@ if ( ! String.prototype.padStart) {
 		} else {
 			targetLength	= targetLength - this.length;
 			if (targetLength > padString.length) {
-				padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
+				padString += padString.repeat(targetLength / padString.length); // Append to original to ensure we are longer than needed
 			}
+
 			return padString.slice(0, targetLength) + String(this);
 		}
 	};
 }
 
 function UserApi(options) {
-	const	logPrefix	= topLogPrefix + 'UserApi() - ',
-		that	= this;
+	const	logPrefix	= topLogPrefix + 'UserApi() - ';
+	const that	= this;
 
 	that.options	= options;
 
-	if ( ! that.options)	that.options	= {};
+	if (! that.options)	that.options	= {};
 
+	if (! that.options.log) {
+		that.options.log = new lUtils.Log('info');
+	}
+
+	if (! that.options.db) {
+		throw new Error('Db instance not present');
+	}
+
+	that.options.log.appLogPrefix	= 'larvituser-api: ';
 	that.api	= new Api(that.options);
 
 	// Parse all incoming data as JSON
 	that.api.middleware.splice(1, 0, function (req, res, cb) {
-
 		if (req.method.toUpperCase() !== 'GET' && req.rawBody === undefined) {
 			res.statusCode	= 400;
 			res.end('"Bad Request\nNo body provided"');
-			log.verbose(logPrefix + 'No body provided.');
+			req.log.verbose(logPrefix + 'No body provided.');
+
 			return;
 		}
 
@@ -70,7 +78,8 @@ function UserApi(options) {
 			} catch (err) {
 				res.statusCode	= 400;
 				res.end('"Bad Request\nProvided body is not a valid JSON string"');
-				log.verbose(logPrefix + 'Could not JSON parse incoming body. err: ' + err.message);
+				req.log.verbose(logPrefix + 'Could not JSON parse incoming body. err: ' + err.message);
+
 				return;
 			}
 		}
@@ -80,39 +89,43 @@ function UserApi(options) {
 };
 
 UserApi.prototype.start = function (cb) {
-	const	logPrefix	= topLogPrefix + 'Api.prototype.start() - ',
-		that	= this;
+	const	logPrefix	= topLogPrefix + 'Api.prototype.start() - ';
+	const that	= this;
 
-	if ( ! cb) cb = function () {};
+	if (! cb) cb = function () {};
 
-	if ( ! that.options.db) {
-		const	err	= new Error('Db instance not present');
-		log.warn(logPrefix + err.message);
-		return cb(err);
-	}
+	let intercom;
 
 	if (that.options.intercom) {
-		userLib.dataWriter.intercom = that.options.intercom;
+		intercom = that.options.intercom;
 	} else if (that.options.amqp && that.options.amqp.default) {
-		userLib.dataWriter.intercom = new Intercom(that.options.amqp.default);
+		intercom = new Intercom(that.options.amqp.default);
 	}
 
-	userLib.dataWriter.mode	= that.options.mode;
-	userLib.options = {
-		'amsync': that.options.amsync
-	};
-
-	log.info(logPrefix + '===--- Larvituser-api starting ---===');
-
-	userLib.ready(function (err) {
+	const userLib = new UserLib({
+		'db': that.options.db,
+		'log': that.options.log,
+		'intercom': intercom,
+		'mode': that.options.mode,
+		'amsyc': that.options.amsync
+	}, function (err) {
 		if (err) return cb(err);
 
+		that.api.middleware.splice(1, 0, function (req, res, cb) {
+			req.userLib = userLib;
+			req.log = that.options.log;
+			req.db = that.options.db;
+			cb();
+		});
+
+		that.options.log.info(logPrefix + '===--- Larvituser-api starting ---===');
 		that.api.start(cb);
-	});;
+	});
 };
 
 UserApi.prototype.stop = function (cb) {
 	const that = this;
+
 	that.api.stop(cb);
 };
 
@@ -122,9 +135,9 @@ exports = module.exports = UserApi;
 if (require.main === module) {
 	const	args	= parser.parseArgs();
 
-	let	options,
-		api,
-		cd;
+	let	options;
+	let api;
+	let cd;
 
 	if (args.configDir) {
 		console.log('Looking for config files in "' + args.configDir + '"');

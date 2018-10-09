@@ -1,18 +1,18 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	userLib	= require('larvituser'),
-	request	= require('request'),
-	uuidv4	= require('uuid/v4'),
-	async	= require('async'),
-	test	= require('tape');
+const	UserApi	= require(__dirname + '/../index.js');
+const UserLib	= require('larvituser');
+const request	= require('request');
+const uuidv4	= require('uuid/v4');
+const async	= require('async');
+const test	= require('tape');
 
 
 test('Create user to login with', function (t) {
 	const	tasks	= [];
 
 	tasks.push(function (cb) {
-		userLib.create('user-login', 'skärböna', { 'firstName': 'Svempa', 'lastname': 'Svampsson'}, uuidv4(), cb);
+		UserLib.instance.create('user-login', 'skärböna', { 'firstName': 'Svempa', 'lastname': 'Svampsson'}, uuidv4(), cb);
 	});
 
 	async.series(tasks, function (err) {
@@ -27,7 +27,7 @@ test('Successful login', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/login';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
 		reqOptions.method	= 'POST';
 		reqOptions.json	= true;
 		reqOptions.body	= {
@@ -57,7 +57,7 @@ test('Failed login', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/login';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
 		reqOptions.method	= 'POST';
 		reqOptions.json	= true;
 		reqOptions.body	= {
@@ -86,7 +86,7 @@ test('Malformed body', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/login';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
 		reqOptions.method	= 'POST';
 		reqOptions.json	= true;
 		reqOptions.body	= {
@@ -115,7 +115,7 @@ test('Unallowed method', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/login';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= {

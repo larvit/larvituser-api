@@ -1,10 +1,10 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	request	= require('request'),
-	async	= require('async'),
-	test	= require('tape'),
-	db	= require('larvitdb');
+const	UserApi	= require(__dirname + '/../index.js');
+const request	= require('request');
+const async	= require('async');
+const test	= require('tape');
+const db	= require('larvitdb');
 
 test('PUT roles rights', function (t) {
 	const	tasks	= [];
@@ -13,7 +13,7 @@ test('PUT roles rights', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= [];
@@ -59,7 +59,7 @@ test('PUT several rights', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= [];
@@ -101,7 +101,7 @@ test('PUT invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= {'bolli': 'bompa'};
@@ -118,7 +118,7 @@ test('PUT invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= [{'bolli': 'bompa', 'igen': 'hihi'}];
@@ -135,7 +135,7 @@ test('PUT invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= [{'  ': 'bompa'}];
@@ -152,7 +152,7 @@ test('PUT invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'PUT';
 		reqOptions.json	= true;
 		reqOptions.body	= [{'dde': ')'}];
@@ -188,7 +188,7 @@ test('DELETE one role right', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'DELETE';
 		reqOptions.json	= true;
 		reqOptions.body	= [];
@@ -240,7 +240,7 @@ test('DELETE two roles rights', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'DELETE';
 		reqOptions.json	= true;
 		reqOptions.body	= [];
@@ -282,7 +282,7 @@ test('DELETE invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'DELETE';
 		reqOptions.json	= true;
 		reqOptions.body	= {'bolli': 'bompa'};
@@ -299,7 +299,7 @@ test('DELETE invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'DELETE';
 		reqOptions.json	= true;
 		reqOptions.body	= [{'bolli': 'bompa', 'igen': 'hihi'}];
@@ -316,7 +316,7 @@ test('DELETE invalid bodies', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'DELETE';
 		reqOptions.json	= true;
 		reqOptions.body	= [{'  ': 'bompa'}];
@@ -352,7 +352,7 @@ test('GET roles rights', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 		reqOptions.method	= 'GET';
 
 		request(reqOptions, function (err, response, body) {
@@ -374,7 +374,7 @@ test('GET roles rights', function (t) {
 test('Invalid method', function (t) {
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/roles_rights';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/roles_rights';
 	reqOptions.method	= 'POST';
 	reqOptions.body = { 'asdfa': 'asdfa' };
 	reqOptions.json = true;

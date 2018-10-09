@@ -1,16 +1,16 @@
 'use strict';
 
-const lUtils	= require('larvitutils'),
-	db	= require('larvitdb');
+const lUtils	= new (require('larvitutils'))();
 
 function controller(req, res, cb) {
 	if (req.method.toUpperCase() !== 'GET') {
 		res.statusCode	= 405;
 		res.data	= '405 Method Not Allowed\nAllowed method(s): GET';
+
 		return cb();
 	}
 
-	db.query('SELECT * FROM user_data_fields ORDER BY name', function (err, rows) {
+	req.db.query('SELECT * FROM user_data_fields ORDER BY name', function (err, rows) {
 		if (err) return cb(err);
 
 		res.data	= [];

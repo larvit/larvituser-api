@@ -1,18 +1,18 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	userLib	= require('larvituser'),
-	request	= require('request'),
-	uuidv4	= require('uuid/v4'),
-	async	= require('async'),
-	test	= require('tape');
+const	UserApi	= require(__dirname + '/../index.js');
+const UserLib	= require('larvituser');
+const request	= require('request');
+const uuidv4	= require('uuid/v4');
+const async	= require('async');
+const test	= require('tape');
 
 test('Create users to list', function (t) {
 	const	tasks	= [];
 
 	for (let i = 0; i < 3; i ++) {
 		tasks.push(function (cb) {
-			userLib.create('user-' + i, 'password-' + i, { 'firstName': 'Benkt-' + i, 'lastname': 'Usersson-' + i}, uuidv4(), cb);
+			UserLib.instance.create('user-' + i, 'password-' + i, { 'firstName': 'Benkt-' + i, 'lastname': 'Usersson-' + i}, uuidv4(), cb);
 		});
 	}
 
@@ -25,7 +25,7 @@ test('Create users to list', function (t) {
 test('Only allow GET', function (t) {
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users';
 	reqOptions.method	= 'POST';
 	reqOptions.json	= true;
 	reqOptions.body	= {};
@@ -45,7 +45,7 @@ test('List users', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -70,7 +70,10 @@ test('Get users based on uuid', function (t) {
 	let	users;
 
 	tasks.push(function (cb) {
-		new userLib.Users().get(function (err, result) {
+		new UserLib.Users({
+			'log': UserLib.instance.options.log,
+			'db': UserLib.instance.options.db
+		}).get(function (err, result) {
 			users	= result;
 			cb(err);
 		});
@@ -80,7 +83,7 @@ test('Get users based on uuid', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?uuids=' + users[0].uuid;
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?uuids=' + users[0].uuid;
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -98,7 +101,7 @@ test('Get users based on uuid', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?uuids=' + users[0].uuid + '&uuids=' + users[1].uuid;
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?uuids=' + users[0].uuid + '&uuids=' + users[1].uuid;
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -123,7 +126,7 @@ test('Get users with limit', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?limit=2';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?limit=2';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -148,7 +151,7 @@ test('Get users with offset', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?offset=2&limit=1';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?offset=2&limit=1';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -174,7 +177,7 @@ test('Get users and fields', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?returnFields=firstName';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?returnFields=firstName';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -205,7 +208,7 @@ test('Get users by query', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/users?q=Benkt-1';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?q=Benkt-1';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 

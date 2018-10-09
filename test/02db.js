@@ -1,19 +1,28 @@
 'use strict';
 
-const	test	= require('tape'),
-	db	= require('larvitdb');
+const	test	= require('tape');
+const db	= require('larvitdb');
+const lUtils = new (require('larvitutils'))();
+
+let options;
 
 if (process.env.DBCONFFILE === undefined) {
-	db.setup(require(__dirname + '/../config/db_test.json'));
+	options = require(__dirname + '/../config/db_test.json');
 } else {
-	db.setup(require(__dirname + '/../' + process.env.DBCONFFILE));
+	options = require(__dirname + '/../' + process.env.DBCONFFILE);
+}
+
+if (! options.log) {
+	options.log = new lUtils.Log('warn');
 }
 
 test('Check db', function (t) {
-	db.query('SHOW TABLES', function (err, rows) {
+	db.setup(options, function (err) {
 		if (err) throw err;
 
-		t.equals(rows.length, 0);
-		t.end();
+		db.removeAllTables(function (err) {
+			if (err) throw err;
+			t.end();
+		});
 	});
 });

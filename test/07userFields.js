@@ -1,16 +1,16 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	request	= require('request'),
-	uuidv4	= require('uuid/v4'),
-	lUtils	= require('larvitutils'),
-	async	= require('async'),
-	test	= require('tape'),
-	db	= require('larvitdb');
+const	UserApi	= require(__dirname + '/../index.js');
+const request	= require('request');
+const uuidv4	= require('uuid/v4');
+const lUtils	= new (require('larvitutils'))();
+const async	= require('async');
+const test	= require('tape');
+const db	= require('larvitdb');
 
 test('GET user field names', function (t) {
-	const	localFieldNames	= [],
-		tasks	= [];
+	const	localFieldNames	= [];
+	const tasks	= [];
 
 	let	localRecords;
 
@@ -19,8 +19,8 @@ test('GET user field names', function (t) {
 
 	// Make sure there are at least one field in the database
 	tasks.push(function (cb) {
-		const	dbFields	= [],
-			sql	= 'INSERT INTO user_data_fields (uuid, name) VALUES(?,?),(?,?);';
+		const	dbFields	= [];
+		const sql	= 'INSERT INTO user_data_fields (uuid, name) VALUES(?,?),(?,?);';
 
 		dbFields.push(lUtils.uuidToBuffer(uuidv4()));
 		dbFields.push(localFieldNames[0]);
@@ -42,7 +42,7 @@ test('GET user field names', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user/fields';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user/fields';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
 
@@ -53,8 +53,8 @@ test('GET user field names', function (t) {
 			t.equal(response.statusCode,	200);
 
 			for (let i = 0; localRecords[i] !== undefined; i ++) {
-				const	localRecord	= localRecords[i],
-					remoteRecord	= body[i];
+				const	localRecord	= localRecords[i];
+				const remoteRecord	= body[i];
 
 				t.equal(lUtils.formatUuid(localRecord.uuid),	remoteRecord.uuid);
 				t.equal(localRecord.name,	remoteRecord.name);
@@ -73,7 +73,7 @@ test('GET user field names', function (t) {
 test('Invalid method', function (t) {
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user/fields';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user/fields';
 	reqOptions.method	= 'DELETE';
 	reqOptions.json	= true;
 	reqOptions.body	= {};

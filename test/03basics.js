@@ -1,26 +1,58 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js'),
-	request	= require('request'),
-	async	= require('async'),
-	test	= require('tape'),
-	db	= require('larvitdb'),
-	fs	= require('fs'),
-	options = {
-		'amqp': { 'default': 'loopback interface' },
-		'amsync':	{},
-		'log':	require(__dirname + '/../config/log_test.json'),
-		'db':	db
-	};
+const	UserApi	= require(__dirname + '/../index.js');
+const UserLib	= require('larvituser');
+const lUtils	= new (require('larvitutils'))();
+const request	= require('request');
+const async	= require('async');
+const test	= require('tape');
+const db	= require('larvitdb');
+const fs	= require('fs');
+const options = {
+	'amqp': { 'default': 'loopback interface' },
+	'amsync':	{},
+	'log':	new lUtils.Log('warn'),
+	'db':	db
+};
 
-test('Trying to start API without options', function (t) {
-	const	userApi	= new UserApi();
+let dbOptions;
 
-	userApi.start(function (err) {
-		t.equal(err instanceof Error,	true);
-		t.equal(err.message,	'Db instance not present');
+if (process.env.DBCONFFILE === undefined) {
+	dbOptions = require(__dirname + '/../config/db_test.json');
+} else {
+	dbOptions = require(__dirname + '/../' + process.env.DBCONFFILE);
+}
+
+if (! dbOptions.log) {
+	dbOptions.log = new lUtils.Log('warn');
+}
+
+test('Init db', function (t) {
+	db.setup(dbOptions, t.end);
+});
+
+test('Init userlib', function (t) {
+	const userLib = new UserLib(options, function (err) {
+		if (err) throw err;
+
+		UserLib.instance = userLib;
+
 		t.end();
 	});
+});
+
+test('Trying to start API without options', function (t) {
+	let iErr;
+
+	try {
+		new UserApi();
+	} catch (err) {
+		iErr = true;
+		t.equal(err.message,	'Db instance not present');
+	}
+
+	t.equal(iErr, true);
+	t.end();
 });
 
 test('Get a response from a controller', function (t) {
@@ -28,13 +60,13 @@ test('Get a response from a controller', function (t) {
 
 	// Initialize api
 	tasks.push(function (cb) {
-		UserApi.instance	= new UserApi(options);
+		UserApi.instance = new UserApi(options);
 		UserApi.instance.start(cb);
 	});
 
 	// Try 200 request for Readme.md
 	tasks.push(function (cb) {
-		request('http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port, function (err, response, body) {
+		request('http://localhost:' + UserApi.instance.api.base.httpServer.address().port, function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	200);
 			t.equal(body.length,	fs.readFileSync(__dirname + '/../README.md').toString().length);
@@ -44,7 +76,7 @@ test('Get a response from a controller', function (t) {
 
 	// Try 404 request
 	tasks.push(function (cb) {
-		request('http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/foo', function (err, response, body) {
+		request('http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/foo', function (err, response, body) {
 			if (err) return cb(err);
 			t.equal(response.statusCode,	404);
 			t.equal(body,	'"URL endpoint not found"');
@@ -61,7 +93,7 @@ test('Get a response from a controller', function (t) {
 test('Malformed request body', function (t) {
 	const	reqOptions	= {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.lBase.httpServer.address().port + '/user';
+	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
 	reqOptions.method	= 'PUT';
 	reqOptions.body	= '{"reven":"NEJ" and no closing thingie and also this text';
 
