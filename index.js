@@ -99,7 +99,10 @@ UserApi.prototype.start = function (cb) {
 	if (that.options.intercom) {
 		intercom = that.options.intercom;
 	} else if (that.options.amqp && that.options.amqp.default) {
-		intercom = new Intercom(that.options.amqp.default);
+		intercom = new Intercom({
+			'conStr': that.options.amqp.default,
+			'log': that.options.log
+		});
 	}
 
 	const userLib = new UserLib({
