@@ -42,6 +42,18 @@ exports = module.exports = function (req, res, cb) {
 			}
 		}
 
+		if (req.urlParsed.query.matchAllFieldsQ && req.urlParsed.query.matchAllFieldsQValues) {
+			users.matchAllFieldsQ = {};
+
+			if (Array.isArray(req.urlParsed.query.matchAllFieldsQ) && Array.isArray(req.urlParsed.query.matchAllFieldsQValues)) {
+				for (let i = 0; i < req.urlParsed.query.matchAllFieldsQ.length; i ++) {
+					users.matchAllFieldsQ[req.urlParsed.query.matchAllFieldsQ[i]] = req.urlParsed.query.matchAllFieldsQValues[i];
+				}
+			} else {
+				users.matchAllFieldsQ[req.urlParsed.query.matchAllFieldsQ] = req.urlParsed.query.matchAllFieldsQValues;
+			}
+		}
+
 		users.get(function (err, users) {
 			// This should probably be fixed in larvituser instead but is a breaking change
 			if (req.urlParsed.query.returnFields) {

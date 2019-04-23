@@ -12,9 +12,13 @@ test('Create users to list', function (t) {
 
 	for (let i = 0; i < 3; i ++) {
 		tasks.push(function (cb) {
-			UserLib.instance.create('user-' + i, 'password-' + i, { 'firstName': 'Benkt-' + i, 'lastname': 'Usersson-' + i}, uuidv4(), cb);
+			UserLib.instance.create('user-' + i, 'password-' + i, { 'firstName': 'Benkt-' + i, 'lastname': 'Usersson-' + i, 'code': i}, uuidv4(), cb);
 		});
 	}
+
+	tasks.push(function (cb) {
+		UserLib.instance.create('user-nisse', 'password-nisse', { 'firstName': 'Nissersson', 'lastname': 'Testsson', 'code': '0'}, uuidv4(), cb);
+	});
 
 	async.series(tasks, function (err) {
 		if (err) throw err;
@@ -53,7 +57,7 @@ test('List users', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	3);
+			t.equal(body.length,	4);
 			cb();
 		});
 	});
@@ -185,7 +189,7 @@ test('Get users and fields', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	3);
+			t.equal(body.length,	4);
 
 			for (const user of body) {
 				t.notEqual(user.firstName,	undefined);
@@ -218,6 +222,62 @@ test('Get users by query', function (t) {
 			t.equal(response.statusCode,	200);
 			t.equal(body.length,	1);
 			t.equal(body[0].username,	'user-1');
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('Get users by query on single specific field', function (t) {
+	const tasks = [];
+
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?matchAllFieldsQ=lastname&matchAllFieldsQValues=ersson';
+		reqOptions.method = 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode, 200);
+			t.equal(body.length, 3);
+			t.ok(body.find((user) => user.username === 'user-0'));
+			t.ok(body.find((user) => user.username === 'user-1'));
+			t.ok(body.find((user) => user.username === 'user-2'));
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('Get users by query on multiple specific fields', function (t) {
+	const tasks = [];
+
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?matchAllFieldsQ=firstname&matchAllFieldsQValues=nisse&matchAllFieldsQ=code&matchAllFieldsQValues=0';
+		reqOptions.method = 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode, 200);
+			t.equal(body.length, 1);
+			t.ok(body.find((user) => user.username === 'user-nisse'));
 
 			cb();
 		});
