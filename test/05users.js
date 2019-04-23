@@ -57,7 +57,7 @@ test('List users', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	4);
+			t.equal(body.result.length,	4);
 			cb();
 		});
 	});
@@ -95,8 +95,8 @@ test('Get users based on uuid', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	1);
-			t.equal(body[0].uuid,	users[0].uuid);
+			t.equal(body.result.length,	1);
+			t.equal(body.result[0].uuid,	users[0].uuid);
 			cb();
 		});
 	});
@@ -113,7 +113,7 @@ test('Get users based on uuid', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	2);
+			t.equal(body.result.length,	2);
 			cb();
 		});
 	});
@@ -138,7 +138,8 @@ test('Get users with limit', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	2);
+			t.equal(body.result.length,	2);
+			t.equal(body.totalElements, 4);
 			cb();
 		});
 	});
@@ -163,8 +164,8 @@ test('Get users with offset', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	1);
-			t.equal(body[0].username,	'user-2');
+			t.equal(body.result.length,	1);
+			t.equal(body.result[0].username,	'user-2');
 			cb();
 		});
 	});
@@ -189,9 +190,9 @@ test('Get users and fields', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	4);
+			t.equal(body.result.length,	4);
 
-			for (const user of body) {
+			for (const user of body.result) {
 				t.notEqual(user.firstName,	undefined);
 				t.equal(user.firstName.length,	1);
 			}
@@ -220,8 +221,8 @@ test('Get users by query', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode,	200);
-			t.equal(body.length,	1);
-			t.equal(body[0].username,	'user-1');
+			t.equal(body.result.length,	1);
+			t.equal(body.result[0].username,	'user-1');
 
 			cb();
 		});
@@ -247,10 +248,10 @@ test('Get users by query on single specific field', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode, 200);
-			t.equal(body.length, 3);
-			t.ok(body.find((user) => user.username === 'user-0'));
-			t.ok(body.find((user) => user.username === 'user-1'));
-			t.ok(body.find((user) => user.username === 'user-2'));
+			t.equal(body.result.length, 3);
+			t.ok(body.result.find((user) => user.username === 'user-0'));
+			t.ok(body.result.find((user) => user.username === 'user-1'));
+			t.ok(body.result.find((user) => user.username === 'user-2'));
 
 			cb();
 		});
@@ -276,8 +277,8 @@ test('Get users by query on multiple specific fields', function (t) {
 			if (err) return cb(err);
 
 			t.equal(response.statusCode, 200);
-			t.equal(body.length, 1);
-			t.ok(body.find((user) => user.username === 'user-nisse'));
+			t.equal(body.result.length, 1);
+			t.ok(body.result.find((user) => user.username === 'user-nisse'));
 
 			cb();
 		});

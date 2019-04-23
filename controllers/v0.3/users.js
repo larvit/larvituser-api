@@ -54,7 +54,7 @@ exports = module.exports = function (req, res, cb) {
 			}
 		}
 
-		users.get(function (err, users) {
+		users.get(function (err, users, totalElements) {
 			// This should probably be fixed in larvituser instead but is a breaking change
 			if (req.urlParsed.query.returnFields) {
 				for (const user of users) {
@@ -67,7 +67,10 @@ exports = module.exports = function (req, res, cb) {
 				}
 			}
 
-			res.data = users;
+			res.data = {
+				'totalElements': totalElements,
+				'result': users
+			};
 
 			cb(err);
 		});
