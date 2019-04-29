@@ -54,7 +54,17 @@ exports = module.exports = function (req, res, cb) {
 			}
 		}
 
+		if (req.urlParsed.query.orderBy) {
+			users.order = {
+				'by': req.urlParsed.query.orderBy
+			};
+
+			if (req.urlParsed.query.orderDirection) users.order.direction = req.urlParsed.query.orderDirection;
+		}
+
 		users.get(function (err, users, totalElements) {
+			if (err) return cb(err);
+
 			// This should probably be fixed in larvituser instead but is a breaking change
 			if (req.urlParsed.query.returnFields) {
 				for (const user of users) {
@@ -72,7 +82,7 @@ exports = module.exports = function (req, res, cb) {
 				'result': users
 			};
 
-			cb(err);
+			cb();
 		});
 	});
 

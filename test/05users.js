@@ -289,3 +289,100 @@ test('Get users by query on multiple specific fields', function (t) {
 		t.end();
 	});
 });
+
+
+test('Get users ordered by username ', function (t) {
+	const tasks = [];
+
+	// Ascending order
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?orderBy=username&orderDirection=asc';
+		reqOptions.method = 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode, 200);
+			t.equal(body.totalElements, 4);
+			t.equal(body.result[0].username, 'user-0');
+			cb();
+		});
+	});
+
+	// Descending order
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?orderBy=username&orderDirection=desc';
+		reqOptions.method = 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode, 200);
+			t.equal(body.totalElements, 4);
+			t.equal(body.result[0].username, 'user-nisse');
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+
+test('Get users ordered by a field value', function (t) {
+	const tasks = [];
+
+	// Get users and order ascending by firstname
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?orderBy=firstName&orderDirection=asc&returnFields=firstName';
+		reqOptions.method = 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode, 200);
+			t.equal(body.totalElements, 4);
+			t.equal(body.result[0].username, 'user-0');
+			t.equal(body.result[0].firstName[0], 'Benkt-0');
+
+			cb();
+		});
+	});
+
+	// Get users and order descending by firstname
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?orderBy=firstName&orderDirection=desc&returnFields=firstName';
+		reqOptions.method = 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode, 200);
+			t.equal(body.totalElements, 4);
+			t.equal(body.result[0].username, 'user-nisse');
+			t.equal(body.result[0].firstName[0], 'Nissersson');
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+
+		t.end();
+	});
+});
