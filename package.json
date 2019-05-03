@@ -1,6 +1,6 @@
 {
   "name": "larvituser-api",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "REST api built on top of larvituser",
   "author": {
     "name": "Klas Espenkrona",

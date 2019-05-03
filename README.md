@@ -277,6 +277,8 @@ This is all optional, will only fetch users that matches **all** criterias.
 * offset:	"integer - how many initial results to skip",
 * uuids:	"comma separated list of uuids",
 * returnFields:	"comma separated list of field names. Will return the values for the fields listed. By default no fields are returned (since return fields is expensive)
+* orderBy	"string - Field to order in, selected field must also be included in returnFields"
+* orderDirection	"string - 'asc' or 'desc', 'asc' is default if not defined"
 
 #### Response body example
 
