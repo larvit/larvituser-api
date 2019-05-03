@@ -19,7 +19,7 @@
     "argparse": "~1.0.9",
     "async": "^2.6.0",
     "larvitbase-api": "^0.5.1",
-    "larvituser": "github:larvit/larvituser#NBS-7",
+    "larvituser": "^0.18.0",
     "larvitutils": "^2.1.0"
   },
   "devDependencies": {
