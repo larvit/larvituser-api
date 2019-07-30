@@ -25,15 +25,24 @@ exports = module.exports = function (req, res, cb) {
 		});
 
 		users.q	= req.urlParsed.query.q;
-		users.uuids	= req.urlParsed.query.uuids;
 		users.limit	= req.urlParsed.query.limit;
 		users.offset	= req.urlParsed.query.offset;
+
+		// Set return uuids
+		if (req.urlParsed.query.uuids !== undefined) {
+			console.log(req.urlParsed.query.uuids);
+			users.uuids = req.urlParsed.query.uuids.split(',');
+
+			for (let i = 0; users.uuids.length !== i; i ++) {
+				users.uuids[i] = users.uuids[i].trim();
+			}
+		}
 
 		// Set return fields
 		if (req.urlParsed.query.returnFields !== undefined) {
 			users.returnFields = req.urlParsed.query.returnFields.split(',');
 
-			for (let i = 0; users.returnFields[i] !== undefined; i ++) {
+			for (let i = 0; users.returnFields.length !== i; i ++) {
 				users.returnFields[i] = users.returnFields[i].trim();
 			}
 		}

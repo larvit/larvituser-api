@@ -87,9 +87,12 @@ test('Get users based on uuid', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?uuids=' + users[0].uuid;
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
+		reqOptions.qs = {
+			'uuids': users[0].uuid
+		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
@@ -105,9 +108,12 @@ test('Get users based on uuid', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?uuids=' + users[0].uuid + '&uuids=' + users[1].uuid;
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
+		reqOptions.qs = {
+			'uuids': users[0].uuid + ',' + users[1].uuid
+		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
