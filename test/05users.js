@@ -182,9 +182,12 @@ test('Get users and fields', function (t) {
 	tasks.push(function (cb) {
 		const	reqOptions	= {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?returnFields=firstName';
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users';
 		reqOptions.method	= 'GET';
 		reqOptions.json	= true;
+		reqOptions.qs = {
+			'returnFields': 'firstName'
+		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
@@ -195,6 +198,42 @@ test('Get users and fields', function (t) {
 			for (const user of body.result) {
 				t.notEqual(user.firstName,	undefined);
 				t.equal(user.firstName.length,	1);
+			}
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('Get users and several fields', function (t) {
+	const	tasks	= [];
+
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users';
+		reqOptions.method	= 'GET';
+		reqOptions.json	= true;
+		reqOptions.qs = {
+			'returnFields': 'firstName,lastName'
+		};
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	200);
+			t.equal(body.result.length,	4);
+
+			for (const user of body.result) {
+				t.notEqual(user.firstName,	undefined);
+				t.equal(user.firstName.length,	1);
+				t.notEqual(user.lastName,	undefined);
+				t.equal(user.lastName.length,	1);
 			}
 
 			cb();

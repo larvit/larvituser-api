@@ -28,7 +28,15 @@ exports = module.exports = function (req, res, cb) {
 		users.uuids	= req.urlParsed.query.uuids;
 		users.limit	= req.urlParsed.query.limit;
 		users.offset	= req.urlParsed.query.offset;
-		users.returnFields	= req.urlParsed.query.returnFields;
+
+		// Set return fields
+		if (req.urlParsed.query.returnFields !== undefined) {
+			users.returnFields = req.urlParsed.query.returnFields.split(',');
+
+			for (let i = 0; users.returnFields[i] !== undefined; i ++) {
+				users.returnFields[i] = users.returnFields[i].trim();
+			}
+		}
 
 		if (req.urlParsed.query.matchAllFields && req.urlParsed.query.matchAllFieldsValues) {
 			users.matchAllFields = {};
