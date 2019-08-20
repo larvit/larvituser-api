@@ -25,26 +25,21 @@ exports = module.exports = function (req, res, cb) {
 		});
 
 		users.q	= req.urlParsed.query.q;
+		users.uuids = req.urlParsed.query.uuids;
 		users.limit	= req.urlParsed.query.limit;
-		users.offset	= req.urlParsed.query.offset;
+		users.offset = req.urlParsed.query.offset;
+		users.returnFields = req.urlParsed.query.returnFields;
 
-		// Set return uuids
-		if (req.urlParsed.query.uuids !== undefined) {
-			console.log(req.urlParsed.query.uuids);
-			users.uuids = req.urlParsed.query.uuids.split(',');
-
-			for (let i = 0; users.uuids.length !== i; i ++) {
-				users.uuids[i] = users.uuids[i].trim();
-			}
+		// Parse comma separated uuids if it is a string
+		if (users.uuids && typeof users.uuids === 'string') {
+			users.uuids = users.uuids.split(',');
+			users.uuids = users.uuids.map(uuid => uuid.trim());
 		}
 
-		// Set return fields
-		if (req.urlParsed.query.returnFields !== undefined) {
-			users.returnFields = req.urlParsed.query.returnFields.split(',');
-
-			for (let i = 0; users.returnFields.length !== i; i ++) {
-				users.returnFields[i] = users.returnFields[i].trim();
-			}
+		// Parse comma separated return fields if it is a string
+		if (users.returnFields && typeof users.returnFields === 'string') {
+			users.returnFields = users.returnFields.split(',');
+			users.returnFields = users.returnFields.map(field => field.trim());
 		}
 
 		if (req.urlParsed.query.matchAllFields && req.urlParsed.query.matchAllFieldsValues) {
@@ -79,24 +74,24 @@ exports = module.exports = function (req, res, cb) {
 			if (req.urlParsed.query.orderDirection) users.order.direction = req.urlParsed.query.orderDirection;
 		}
 
-		users.get(function (err, users, totalElements) {
+		users.get(function (err, usersResult, totalElements) {
 			if (err) return cb(err);
 
 			// This should probably be fixed in larvituser instead but is a breaking change
-			if (req.urlParsed.query.returnFields) {
-				for (const user of users) {
+			// For backwards compatibility field must be set on user object and on user.fields object
+			if (users.returnFields) {
+				for (const user of usersResult) {
 					user.fields = {};
 
-					for (const rf of req.urlParsed.query.returnFields) {
+					for (const rf of users.returnFields) {
 						user.fields[rf] = user[rf];
-						delete user[rf];
 					}
 				}
 			}
 
 			res.data = {
 				'totalElements': totalElements,
-				'result': users
+				'result': usersResult
 			};
 
 			cb();

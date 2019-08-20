@@ -120,6 +120,27 @@ test('Get users based on uuid', function (t) {
 
 			t.equal(response.statusCode,	200);
 			t.equal(body.result.length,	2);
+			t.ok(body.result.find(user => user.uuid === users[0].uuid));
+			t.ok(body.result.find(user => user.uuid === users[1].uuid));
+			cb();
+		});
+	});
+
+	// Get two users using multiple query parameters
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + `/users?uuids=${users[0].uuid}&uuids=${users[1].uuid}`;
+		reqOptions.method	= 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	200);
+			t.equal(body.result.length,	2);
+			t.ok(body.result.find(user => user.uuid === users[0].uuid));
+			t.ok(body.result.find(user => user.uuid === users[1].uuid));
 			cb();
 		});
 	});
@@ -216,7 +237,7 @@ test('Get users and fields', function (t) {
 	});
 });
 
-test('Get users and several fields', function (t) {
+test('Get users and several fields using comma separated list', function (t) {
 	const	tasks	= [];
 
 	tasks.push(function (cb) {
@@ -234,6 +255,55 @@ test('Get users and several fields', function (t) {
 
 			t.equal(response.statusCode,	200);
 			t.equal(body.result.length,	4);
+			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-0'));
+			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-1'));
+			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-2'));
+			t.ok(body.result.find(user => String(user.firstName) === 'Nissersson'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-0'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-1'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-2'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Testsson'));
+
+			for (const user of body.result) {
+				t.notEqual(user.firstName,	undefined);
+				t.equal(user.firstName.length,	1);
+				t.notEqual(user.lastName,	undefined);
+				t.equal(user.lastName.length,	1);
+			}
+
+			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('Get users and several fields using multiple query parameters', function (t) {
+	const	tasks	= [];
+
+	tasks.push(function (cb) {
+		const	reqOptions	= {};
+
+		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/users?returnFields=firstName&returnFields=lastName';
+		reqOptions.method	= 'GET';
+		reqOptions.json	= true;
+
+		request(reqOptions, function (err, response, body) {
+			if (err) return cb(err);
+
+			t.equal(response.statusCode,	200);
+			t.equal(body.result.length,	4);
+			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-0'));
+			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-1'));
+			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-2'));
+			t.ok(body.result.find(user => String(user.firstName) === 'Nissersson'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-0'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-1'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-2'));
+			t.ok(body.result.find(user => String(user.lastName) === 'Testsson'));
 
 			for (const user of body.result) {
 				t.notEqual(user.firstName,	undefined);
