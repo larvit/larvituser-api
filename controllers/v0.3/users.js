@@ -4,13 +4,13 @@ const async = require('async');
 const UserLib = require('larvituser');
 
 exports = module.exports = function (req, res, cb) {
-	const	tasks = [];
+	const tasks = [];
 	const topLogPrefix = req.log.appLogPrefix + __filename + ' - ';
 
 	if (req.method.toUpperCase() !== 'GET') {
 		req.log.info(topLogPrefix + 'Got request with unallowed method: "' + req.method + '", query: "' + req.urlParsed.href + '"');
 		res.setHeader('Content-Type', 'text/plain');
-		res.statusCode	= 405;
+		res.statusCode = 405;
 		res.data = '"Method not allowed"';
 
 		return cb();
@@ -20,13 +20,13 @@ exports = module.exports = function (req, res, cb) {
 
 	tasks.push(function (cb) {
 		const users = new UserLib.Users({
-			'db': req.db,
-			'log': req.log
+			db: req.db,
+			log: req.log
 		});
 
-		users.q	= req.urlParsed.query.q;
+		users.q = req.urlParsed.query.q;
 		users.uuids = req.urlParsed.query.uuids;
-		users.limit	= req.urlParsed.query.limit;
+		users.limit = req.urlParsed.query.limit;
 		users.offset = req.urlParsed.query.offset;
 		users.returnFields = req.urlParsed.query.returnFields;
 
@@ -46,7 +46,7 @@ exports = module.exports = function (req, res, cb) {
 			users.matchAllFields = {};
 
 			if (Array.isArray(req.urlParsed.query.matchAllFields) && Array.isArray(req.urlParsed.query.matchAllFieldsValues)) {
-				for (let i = 0; i < req.urlParsed.query.matchAllFields.length; i ++) {
+				for (let i = 0; i < req.urlParsed.query.matchAllFields.length; i++) {
 					users.matchAllFields[req.urlParsed.query.matchAllFields[i]] = req.urlParsed.query.matchAllFieldsValues[i];
 				}
 			} else {
@@ -58,7 +58,7 @@ exports = module.exports = function (req, res, cb) {
 			users.matchAllFieldsQ = {};
 
 			if (Array.isArray(req.urlParsed.query.matchAllFieldsQ) && Array.isArray(req.urlParsed.query.matchAllFieldsQValues)) {
-				for (let i = 0; i < req.urlParsed.query.matchAllFieldsQ.length; i ++) {
+				for (let i = 0; i < req.urlParsed.query.matchAllFieldsQ.length; i++) {
 					users.matchAllFieldsQ[req.urlParsed.query.matchAllFieldsQ[i]] = req.urlParsed.query.matchAllFieldsQValues[i];
 				}
 			} else {
@@ -68,7 +68,7 @@ exports = module.exports = function (req, res, cb) {
 
 		if (req.urlParsed.query.orderBy) {
 			users.order = {
-				'by': req.urlParsed.query.orderBy
+				by: req.urlParsed.query.orderBy
 			};
 
 			if (req.urlParsed.query.orderDirection) users.order.direction = req.urlParsed.query.orderDirection;
@@ -90,8 +90,8 @@ exports = module.exports = function (req, res, cb) {
 			}
 
 			res.data = {
-				'totalElements': totalElements,
-				'result': usersResult
+				totalElements: totalElements,
+				result: usersResult
 			};
 
 			cb();

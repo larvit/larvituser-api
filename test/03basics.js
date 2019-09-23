@@ -1,18 +1,18 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js');
-const UserLib	= require('larvituser');
-const lUtils	= new (require('larvitutils'))();
-const request	= require('request');
-const async	= require('async');
-const test	= require('tape');
-const db	= require('larvitdb');
-const fs	= require('fs');
+const UserApi = require(__dirname + '/../index.js');
+const UserLib = require('larvituser');
+const {Log} = require('larvitutils');
+const request = require('request');
+const async = require('async');
+const test = require('tape');
+const db = require('larvitdb');
+const fs = require('fs');
 const options = {
-	'amqp': { 'default': 'loopback interface' },
-	'amsync':	{},
-	'log':	new lUtils.Log('warn'),
-	'db':	db
+	amqp: { default: 'loopback interface' },
+	amsync: {},
+	log: new Log('warn'),
+	db: db
 };
 
 let dbOptions;
@@ -23,8 +23,8 @@ if (process.env.DBCONFFILE === undefined) {
 	dbOptions = require(__dirname + '/../' + process.env.DBCONFFILE);
 }
 
-if (! dbOptions.log) {
-	dbOptions.log = new lUtils.Log('warn');
+if (!dbOptions.log) {
+	dbOptions.log = new Log('warn');
 }
 
 test('Init db', function (t) {
@@ -48,7 +48,7 @@ test('Trying to start API without options', function (t) {
 		new UserApi();
 	} catch (err) {
 		iErr = true;
-		t.equal(err.message,	'Db instance not present');
+		t.equal(err.message, 'Db instance not present');
 	}
 
 	t.equal(iErr, true);
@@ -56,7 +56,7 @@ test('Trying to start API without options', function (t) {
 });
 
 test('Get a response from a controller', function (t) {
-	const	tasks	= [];
+	const tasks = [];
 
 	// Initialize api
 	tasks.push(function (cb) {
@@ -68,8 +68,8 @@ test('Get a response from a controller', function (t) {
 	tasks.push(function (cb) {
 		request('http://localhost:' + UserApi.instance.api.base.httpServer.address().port, function (err, response, body) {
 			if (err) return cb(err);
-			t.equal(response.statusCode,	200);
-			t.equal(body.length,	fs.readFileSync(__dirname + '/../README.md').toString().length);
+			t.equal(response.statusCode, 200);
+			t.equal(body.length, fs.readFileSync(__dirname + '/../README.md').toString().length);
 			cb();
 		});
 	});
@@ -78,8 +78,8 @@ test('Get a response from a controller', function (t) {
 	tasks.push(function (cb) {
 		request('http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/foo', function (err, response, body) {
 			if (err) return cb(err);
-			t.equal(response.statusCode,	404);
-			t.equal(body,	'"URL endpoint not found"');
+			t.equal(response.statusCode, 404);
+			t.equal(body, '"URL endpoint not found"');
 			cb();
 		});
 	});
@@ -91,16 +91,16 @@ test('Get a response from a controller', function (t) {
 });
 
 test('Malformed request body', function (t) {
-	const	reqOptions	= {};
+	const reqOptions = {};
 
-	reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
-	reqOptions.method	= 'PUT';
-	reqOptions.body	= '{"reven":"NEJ" and no closing thingie and also this text';
+	reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
+	reqOptions.method = 'PUT';
+	reqOptions.body = '{"reven":"NEJ" and no closing thingie and also this text';
 
 	request(reqOptions, function (err, response, body) {
 		if (err) return cb(err);
-		t.equal(response.statusCode,	400);
-		t.equal(body,	'"Bad Request\nProvided body is not a valid JSON string"');
+		t.equal(response.statusCode, 400);
+		t.equal(body, '"Bad Request\nProvided body is not a valid JSON string"');
 		t.end();
 	});
 });

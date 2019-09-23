@@ -17,14 +17,14 @@
   "private": false,
   "dependencies": {
     "argparse": "~1.0.9",
-    "async": "^2.6.0",
+    "async": "^3.1.0",
     "larvitbase-api": "^0.5.1",
-    "larvituser": "^0.18.0",
-    "larvitutils": "^2.1.0"
+    "larvituser": "^0.19.0",
+    "larvitutils": "^3.2.1"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
-    "eslint": "^5.6.1",
+    "eslint": "^6.4.0",
     "freeport": "^1.0.5",
     "istanbul": "^0.4.5",
     "request": "^2.88.0",

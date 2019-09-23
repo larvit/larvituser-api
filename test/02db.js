@@ -1,8 +1,8 @@
 'use strict';
 
-const	test	= require('tape');
-const db	= require('larvitdb');
-const lUtils = new (require('larvitutils'))();
+const test = require('tape');
+const db = require('larvitdb');
+const {Log} = require('larvitutils');
 
 let options;
 
@@ -12,8 +12,8 @@ if (process.env.DBCONFFILE === undefined) {
 	options = require(__dirname + '/../' + process.env.DBCONFFILE);
 }
 
-if (! options.log) {
-	options.log = new lUtils.Log('warn');
+if (!options.log) {
+	options.log = new Log('warn');
 }
 
 test('Check db', function (t) {

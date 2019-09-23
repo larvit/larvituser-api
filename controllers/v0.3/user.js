@@ -1,41 +1,41 @@
 'use strict';
-const lUtils	= new (require('larvitutils'))();
-const async	= require('async');
+const lUtils = new (require('larvitutils').Utils)();
+const async = require('async');
 
 function createOrReplaceUser(req, res, cb) {
-	const	tasks	= [];
-	let	logPrefix	= req.log.appLogPrefix + __filename + ' - createOrReplaceUser() - ';
+	const tasks = [];
+	let logPrefix = req.log.appLogPrefix + __filename + ' - createOrReplaceUser() - ';
 	let user;
 
 	req.log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
 
-	res.statusCode	= 200;
+	res.statusCode = 200;
 
 	// Check uuid for validity
 	if (req.jsonBody.uuid) {
-		req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
+		req.jsonBody.uuid = lUtils.formatUuid(req.jsonBody.uuid);
 
 		if (req.jsonBody.uuid === false) {
-			res.statusCode	= 400;
-			res.data	= 'Bad Request\nProvided uuid has an invalid format';
+			res.statusCode = 400;
+			res.data = 'Bad Request\nProvided uuid has an invalid format';
 
 			return cb();
 		}
 	}
 
 	// Check so username is a valid string
-	if (! req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
-		res.statusCode	= 400;
-		res.data	= 'Bad Request\nNo username provided';
+	if (!req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
+		res.statusCode = 400;
+		res.data = 'Bad Request\nNo username provided';
 
 		return cb();
 	}
 
-	req.jsonBody.username	= String(req.jsonBody.username).trim();
+	req.jsonBody.username = String(req.jsonBody.username).trim();
 
 	if (req.jsonBody.username.length > 191) {
-		res.statusCode	= 422;
-		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
+		res.statusCode = 422;
+		res.data = 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
 
 		return cb();
 	}
@@ -51,7 +51,7 @@ function createOrReplaceUser(req, res, cb) {
 
 				if (result) {
 					req.log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
-					user	= result;
+					user = result;
 				}
 				cb();
 			});
@@ -69,10 +69,10 @@ function createOrReplaceUser(req, res, cb) {
 		req.userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
 			if (err) return cb(err);
 
-			if (! result) {
+			if (!result) {
 				req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
-				res.statusCode	= 422;
-				res.data	= 'Unprocessable Entity\nUsername is taken by another user';
+				res.statusCode = 422;
+				res.data = 'Unprocessable Entity\nUsername is taken by another user';
 
 				return cb();
 			}
@@ -89,7 +89,7 @@ function createOrReplaceUser(req, res, cb) {
 
 		req.userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
 			if (err) return cb(err);
-			user	= result;
+			user = result;
 			req.log.debug(logPrefix + 'New user created');
 
 			cb();
@@ -103,7 +103,7 @@ function createOrReplaceUser(req, res, cb) {
 		}
 
 		user.setUsername(req.jsonBody.username, function (err) {
-			if (! err) user.username = req.jsonBody.username;
+			if (!err) user.username = req.jsonBody.username;
 			cb(err);
 		});
 	});
@@ -123,10 +123,10 @@ function createOrReplaceUser(req, res, cb) {
 		if (err) return cb(err);
 		if (res.statusCode === 200) {
 			res.data = {
-				'fields': user.fields,
-				'uuid': user.uuid,
-				'username': user.username,
-				'passwordIsFalse': user.passwordIsFalse
+				fields: user.fields,
+				uuid: user.uuid,
+				username: user.username,
+				passwordIsFalse: user.passwordIsFalse
 			};
 		}
 		cb();
@@ -135,42 +135,42 @@ function createOrReplaceUser(req, res, cb) {
 
 function deleteUser(req, res, cb) {
 	// Check uuid for validity
-	req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
+	req.jsonBody.uuid = lUtils.formatUuid(req.jsonBody.uuid);
 
 	if (req.jsonBody.uuid === false) {
-		res.statusCode	= 400;
-		res.data	= 'Bad Request\nProvided uuid has an invalid format';
+		res.statusCode = 400;
+		res.data = 'Bad Request\nProvided uuid has an invalid format';
 
 		return cb();
 	}
 
 	req.userLib.rmUser(req.jsonBody.uuid, function (err) {
 		if (err) return cb(err);
-		res.data	= 'acknowledged';
+		res.data = 'acknowledged';
 		cb();
 	});
 }
 
 function getUser(req, res, cb) {
 	if (req.urlParsed.query.uuid && req.urlParsed.query.username) {
-		res.statusCode	= 400;
-		res.data	= 'Bad Request\nOnly one of uuid and username is allowed at every single request';
+		res.statusCode = 400;
+		res.data = 'Bad Request\nOnly one of uuid and username is allowed at every single request';
 
 		return cb();
-	} else if (! req.urlParsed.query.uuid && ! req.urlParsed.query.username) {
-		res.statusCode	= 400;
-		res.data	= 'Bad Request\nURL parameters uuid or username is required';
+	} else if (!req.urlParsed.query.uuid && !req.urlParsed.query.username) {
+		res.statusCode = 400;
+		res.data = 'Bad Request\nURL parameters uuid or username is required';
 
 		return cb();
 	}
 
 	// Check uuid for validity
 	if (req.urlParsed.query.uuid) {
-		req.urlParsed.query.uuid	= lUtils.formatUuid(req.urlParsed.query.uuid);
+		req.urlParsed.query.uuid = lUtils.formatUuid(req.urlParsed.query.uuid);
 
 		if (req.urlParsed.query.uuid === false) {
-			res.statusCode	= 400;
-			res.data	= 'Bad Request\nProvided uuid has an invalid format';
+			res.statusCode = 400;
+			res.data = 'Bad Request\nProvided uuid has an invalid format';
 
 			return cb();
 		}
@@ -179,41 +179,41 @@ function getUser(req, res, cb) {
 		req.userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
 			if (err) return cb(err);
 
-			if (! user) {
-				res.statusCode	= 404;
-				res.data	= 'Not Found';
+			if (!user) {
+				res.statusCode = 404;
+				res.data = 'Not Found';
 
 				return cb();
 			}
 
 			res.data = {
-				'fields': user.fields,
-				'uuid': user.uuid,
-				'username': user.username,
-				'passwordIsFalse': user.passwordIsFalse
+				fields: user.fields,
+				uuid: user.uuid,
+				username: user.username,
+				passwordIsFalse: user.passwordIsFalse
 			};
 
 			cb();
 		});
 	} else if (req.urlParsed.query.username) {
-		req.urlParsed.query.username	= String(req.urlParsed.query.username);
+		req.urlParsed.query.username = String(req.urlParsed.query.username);
 
 		// Fetch user
 		req.userLib.fromUsername(req.urlParsed.query.username, function (err, user) {
 			if (err) return cb(err);
 
-			if (! user) {
-				res.statusCode	= 404;
-				res.data	= 'Not Found';
+			if (!user) {
+				res.statusCode = 404;
+				res.data = 'Not Found';
 
 				return cb();
 			}
 
 			res.data = {
-				'fields': user.fields,
-				'uuid': user.uuid,
-				'username': user.username,
-				'passwordIsFalse': user.passwordIsFalse
+				fields: user.fields,
+				uuid: user.uuid,
+				username: user.username,
+				passwordIsFalse: user.passwordIsFalse
 			};
 
 			cb();
@@ -222,38 +222,38 @@ function getUser(req, res, cb) {
 }
 
 function patchUser(req, res, cb) {
-	const	logPrefix	= req.log.appLogPrefix + __filename + ' - patchUser() - ';
-	const tasks	= [];
+	const logPrefix = req.log.appLogPrefix + __filename + ' - patchUser() - ';
+	const tasks = [];
 
-	let	user;
+	let user;
 
-	res.statusCode	= 200;
+	res.statusCode = 200;
 
 	// Check uuid for validity
-	req.jsonBody.uuid	= lUtils.formatUuid(req.jsonBody.uuid);
+	req.jsonBody.uuid = lUtils.formatUuid(req.jsonBody.uuid);
 
 	if (req.jsonBody.uuid === false) {
-		res.statusCode	= 400;
-		res.data	= 'Bad Request\nProvided uuid has an invalid format';
+		res.statusCode = 400;
+		res.data = 'Bad Request\nProvided uuid has an invalid format';
 
 		return cb();
 	}
 
 	// Check username length
 	if (req.jsonBody.username && req.jsonBody.username.length > 191) {
-		res.statusCode	= 422;
-		res.data	= 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
+		res.statusCode = 422;
+		res.data = 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
 
 		return cb();
 	}
 
 	// Check username for validity
 	if (req.jsonBody.username) {
-		req.jsonBody.username	= String(req.jsonBody.username).trim();
+		req.jsonBody.username = String(req.jsonBody.username).trim();
 
 		if (req.jsonBody.username === '') {
-			res.statusCode	= 422;
-			res.data	= 'Unprocessable Entity\nUsername must contain at least one non-space character';
+			res.statusCode = 422;
+			res.data = 'Unprocessable Entity\nUsername must contain at least one non-space character';
 
 			return cb();
 		}
@@ -263,7 +263,7 @@ function patchUser(req, res, cb) {
 	tasks.push(function (cb) {
 		req.userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
 			if (err) return cb(err);
-			user	= result;
+			user = result;
 			cb();
 		});
 	});
@@ -271,17 +271,17 @@ function patchUser(req, res, cb) {
 	// Check so new username is available
 	// IMPORTANT!!! That this happends before updating fields!
 	tasks.push(function (cb) {
-		if (! user || ! req.jsonBody.username || req.jsonBody.username === user.username) {
+		if (!user || !req.jsonBody.username || req.jsonBody.username === user.username) {
 			return cb();
 		}
 
 		req.userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
 			if (err) return cb(err);
 
-			if (! result) {
+			if (!result) {
 				req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
-				res.statusCode	= 422;
-				res.data	= 'Unprocessable Entity\nUsername is taken by another user';
+				res.statusCode = 422;
+				res.data = 'Unprocessable Entity\nUsername is taken by another user';
 			}
 
 			cb();
@@ -290,16 +290,16 @@ function patchUser(req, res, cb) {
 
 	// Update fields
 	tasks.push(function (cb) {
-		const	newFields	= {};
+		const newFields = {};
 
-		if (! user || ! req.jsonBody.fields || res.statusCode !== 200) return cb();
+		if (!user || !req.jsonBody.fields || res.statusCode !== 200) return cb();
 
 		for (const fieldName of Object.keys(user.fields)) {
-			newFields[fieldName]	= user.fields[fieldName];
+			newFields[fieldName] = user.fields[fieldName];
 		}
 
 		for (const fieldName of Object.keys(req.jsonBody.fields)) {
-			newFields[fieldName]	= req.jsonBody.fields[fieldName];
+			newFields[fieldName] = req.jsonBody.fields[fieldName];
 		}
 
 		user.replaceFields(newFields, cb);
@@ -307,7 +307,7 @@ function patchUser(req, res, cb) {
 
 	// Update username
 	tasks.push(function (cb) {
-		if (! user || ! req.jsonBody.username || req.jsonBody.username === user.username || res.statusCode !== 200) {
+		if (!user || !req.jsonBody.username || req.jsonBody.username === user.username || res.statusCode !== 200) {
 			return cb();
 		}
 
@@ -317,17 +317,17 @@ function patchUser(req, res, cb) {
 	async.series(tasks, function (err) {
 		if (err) return cb(err);
 
-		if (! user) {
-			res.statusCode	= 404;
-			res.data	= 'Not Found';
+		if (!user) {
+			res.statusCode = 404;
+			res.data = 'Not Found';
 		}
 
 		if (res.statusCode === 200) {
 			res.data = {
-				'fields': user.fields,
-				'uuid': user.uuid,
-				'username': user.username,
-				'passwordIsFalse': user.passwordIsFalse
+				fields: user.fields,
+				uuid: user.uuid,
+				username: user.username,
+				passwordIsFalse: user.passwordIsFalse
 			};
 		}
 
@@ -345,8 +345,8 @@ function controller(req, res, cb) {
 	} else if (req.method.toUpperCase() === 'PATCH') {
 		patchUser(req, res, cb);
 	} else {
-		res.statusCode	= 405;
-		res.data	= 'Method Not Allowed\nAllowed method(s): GET, PUT, PATCH, DELETE';
+		res.statusCode = 405;
+		res.data = 'Method Not Allowed\nAllowed method(s): GET, PUT, PATCH, DELETE';
 		cb();
 	}
 

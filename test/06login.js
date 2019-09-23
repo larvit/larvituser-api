@@ -1,18 +1,18 @@
 'use strict';
 
-const	UserApi	= require(__dirname + '/../index.js');
-const UserLib	= require('larvituser');
-const request	= require('request');
-const uuidv4	= require('uuid/v4');
-const async	= require('async');
-const test	= require('tape');
+const UserApi = require(__dirname + '/../index.js');
+const UserLib = require('larvituser');
+const request = require('request');
+const uuidv4 = require('uuid/v4');
+const async = require('async');
+const test = require('tape');
 
 
 test('Create user to login with', function (t) {
-	const	tasks	= [];
+	const tasks = [];
 
 	tasks.push(function (cb) {
-		UserLib.instance.create('user-login', 'skärböna', { 'firstName': 'Svempa', 'lastname': 'Svampsson'}, uuidv4(), cb);
+		UserLib.instance.create('user-login', 'skärböna', { firstName: 'Svempa', lastname: 'Svampsson'}, uuidv4(), cb);
 	});
 
 	async.series(tasks, function (err) {
@@ -22,25 +22,25 @@ test('Create user to login with', function (t) {
 });
 
 test('Successful login', function (t) {
-	const	tasks	= [];
+	const tasks = [];
 
 	tasks.push(function (cb) {
-		const	reqOptions	= {};
+		const reqOptions = {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
-		reqOptions.method	= 'POST';
-		reqOptions.json	= true;
-		reqOptions.body	= {
-			'username': 'user-login',
-			'password': 'skärböna'
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
+		reqOptions.method = 'POST';
+		reqOptions.json = true;
+		reqOptions.body = {
+			username: 'user-login',
+			password: 'skärböna'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
-			t.equal(response.statusCode,	200);
-			t.equal(body.username,	'user-login');
-			t.equal(body.fields.firstName[0],	'Svempa');
+			t.equal(response.statusCode, 200);
+			t.equal(body.username, 'user-login');
+			t.equal(body.fields.firstName[0], 'Svempa');
 			cb();
 		});
 	});
@@ -52,24 +52,24 @@ test('Successful login', function (t) {
 });
 
 test('Failed login', function (t) {
-	const	tasks	= [];
+	const tasks = [];
 
 	tasks.push(function (cb) {
-		const	reqOptions	= {};
+		const reqOptions = {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
-		reqOptions.method	= 'POST';
-		reqOptions.json	= true;
-		reqOptions.body	= {
-			'username':	'user-login',
-			'password':	'fel lösenord'
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
+		reqOptions.method = 'POST';
+		reqOptions.json = true;
+		reqOptions.body = {
+			username: 'user-login',
+			password: 'fel lösenord'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
-			t.equal(response.statusCode,	200);
-			t.equal(body,	false);
+			t.equal(response.statusCode, 200);
+			t.equal(body, false);
 			cb();
 		});
 	});
@@ -81,24 +81,24 @@ test('Failed login', function (t) {
 });
 
 test('Malformed body', function (t) {
-	const	tasks	= [];
+	const tasks = [];
 
 	tasks.push(function (cb) {
-		const	reqOptions	= {};
+		const reqOptions = {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
-		reqOptions.method	= 'POST';
-		reqOptions.json	= true;
-		reqOptions.body	= {
-			'sdf':	'user-login',
-			'password':	'fel lösenord'
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
+		reqOptions.method = 'POST';
+		reqOptions.json = true;
+		reqOptions.body = {
+			sdf: 'user-login',
+			password: 'fel lösenord'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
-			t.equal(response.statusCode,	400);
-			t.equal(body,	'400 Malformed request body');
+			t.equal(response.statusCode, 400);
+			t.equal(body, '400 Malformed request body');
 			cb();
 		});
 	});
@@ -110,24 +110,24 @@ test('Malformed body', function (t) {
 });
 
 test('Unallowed method', function (t) {
-	const	tasks	= [];
+	const tasks = [];
 
 	tasks.push(function (cb) {
-		const	reqOptions	= {};
+		const reqOptions = {};
 
-		reqOptions.url	= 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
-		reqOptions.method	= 'PUT';
-		reqOptions.json	= true;
-		reqOptions.body	= {
-			'username':	'user-login',
-			'password':	'skärböna'
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/login';
+		reqOptions.method = 'PUT';
+		reqOptions.json = true;
+		reqOptions.body = {
+			username: 'user-login',
+			password: 'skärböna'
 		};
 
 		request(reqOptions, function (err, response, body) {
 			if (err) return cb(err);
 
-			t.equal(response.statusCode,	405);
-			t.equal(body,	'405 Method Not Allowed\nAllowed methods: POST');
+			t.equal(response.statusCode, 405);
+			t.equal(body, '405 Method Not Allowed\nAllowed methods: POST');
 			cb();
 		});
 	});
