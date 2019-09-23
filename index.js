@@ -105,25 +105,42 @@ UserApi.prototype.start = function (cb) {
 		});
 	}
 
-	const userLib = new UserLib({
-		db: that.options.db,
-		log: that.options.log,
-		intercom: intercom,
-		mode: that.options.mode,
-		amsyc: that.options.amsync
-	}, function (err) {
-		if (err) return cb(err);
+	function getUserLibInstance() {
+		return new Promise((resolve, reject) => {
+			if (that.options.userLib) {
+				resolve(that.options.userLib);
 
-		that.api.middleware.splice(1, 0, function (req, res, cb) {
-			req.userLib = userLib;
-			req.log = that.options.log;
-			req.db = that.options.db;
-			cb();
+				return;
+			}
+
+			const userLib = new UserLib({
+				db: that.options.db,
+				log: that.options.log,
+				intercom: intercom,
+				mode: that.options.mode,
+				amsyc: that.options.amsync
+			}, function (err) {
+				if (err) return reject(err);
+				resolve(userLib);
+			});
 		});
+	}
 
-		that.options.log.info(logPrefix + '===--- Larvituser-api starting ---===');
-		that.api.start(cb);
-	});
+	getUserLibInstance()
+		.then(userLib => {
+			that.api.middleware.splice(1, 0, function (req, res, cb) {
+				req.userLib = userLib;
+				req.log = that.options.log;
+				req.db = that.options.db;
+				cb();
+			});
+
+			that.options.log.info(logPrefix + '===--- Larvituser-api starting ---===');
+			that.api.start(cb);
+		})
+		.catch(err => {
+			return cb(err);
+		});
 };
 
 UserApi.prototype.stop = function (cb) {

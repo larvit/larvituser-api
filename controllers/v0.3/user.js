@@ -7,7 +7,7 @@ function createOrReplaceUser(req, res, cb) {
 	let logPrefix = req.log.appLogPrefix + __filename + ' - createOrReplaceUser() - ';
 	let user;
 
-	req.log.verbose(logPrefix + 'rawBody: ' + req.rawBody);
+	req.log.verbose(`${logPrefix} uuid: ${req.jsonBody.uuid}, username: ${req.jsonBody.username}, fields: ${JSON.stringify(req.jsonBody.fields)}`);
 
 	res.statusCode = 200;
 
