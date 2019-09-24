@@ -300,7 +300,6 @@ test('PUT user, update user but not username', function (t) {
 		reqOptions.method = 'PUT';
 		reqOptions.body = {};
 		reqOptions.body.uuid = userUuid;
-		reqOptions.body.username = 'putUserUpdate_notUsername';
 		reqOptions.body.password = 'bar';
 		reqOptions.body.fields = {};
 		reqOptions.body.fields.flaff = 'brånk';
@@ -854,6 +853,55 @@ test('PATCH user - username', function (t) {
 			t.equal(rows[1].data, 'koma');
 
 			cb();
+		});
+	});
+
+	async.series(tasks, function (err) {
+		if (err) throw err;
+		t.end();
+	});
+});
+
+test('PATCH user - password', function (t) {
+	const userUuid = uuidv1();
+	const tasks = [];
+
+	// Create user
+	tasks.push(function (cb) {
+		UserLib.instance.create('patchUser_password', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid, cb);
+	});
+
+	// Run request
+	tasks.push(function (cb) {
+		const reqOptions = {};
+
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
+		reqOptions.method = 'PATCH';
+		reqOptions.body = {};
+		reqOptions.body.uuid = userUuid;
+		reqOptions.body.password = 'newpass';
+		reqOptions.json = true;
+
+		request(reqOptions, function (err, response) {
+			if (err) return cb(err);
+			t.equal(response.statusCode, 200);
+
+			cb();
+		});
+	});
+
+	// Check data in database
+	tasks.push(function (cb) {
+		db.query('SELECT * FROM user_users WHERE username = \'patchUser_password\'', function (err, rows) {
+			if (err) return cb(err);
+
+			t.equal(rows.length, 1);
+			UserLib.instance.checkPassword('newpass', rows[0].password, (err, result) => {
+				if (err) return cb(err);
+				t.equal(result, true);
+
+				cb();
+			});
 		});
 	});
 

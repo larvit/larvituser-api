@@ -189,8 +189,6 @@ Some considerations:
 
 #### Response body example
 
-201 Created
-or
 200 OK
 
 ```json

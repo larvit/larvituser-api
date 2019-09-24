@@ -23,21 +23,15 @@ function createOrReplaceUser(req, res, cb) {
 		}
 	}
 
-	// Check so username is a valid string
-	if (!req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
-		res.statusCode = 400;
-		res.data = 'Bad Request\nNo username provided';
+	if (req.jsonBody.username) {
+		req.jsonBody.username = String(req.jsonBody.username).trim();
 
-		return cb();
-	}
+		if (req.jsonBody.username.length > 191) {
+			res.statusCode = 422;
+			res.data = 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
 
-	req.jsonBody.username = String(req.jsonBody.username).trim();
-
-	if (req.jsonBody.username.length > 191) {
-		res.statusCode = 422;
-		res.data = 'Unprocessable Entity\nUsername to long; maximum 191 UTF-8 characters allowed';
-
-		return cb();
+			return cb();
+		}
 	}
 
 	// Check if user exists on given uuid, otherwise create it
@@ -58,8 +52,24 @@ function createOrReplaceUser(req, res, cb) {
 		});
 	}
 
+	// Check so username is a valid string (only required if uuid is not specified and user is not found)
+	tasks.push(function (cb) {
+		if (res.statusCode !== 200 || user) return cb();
+
+		if (!req.jsonBody.username || String(req.jsonBody.username).trim() === '') {
+			res.statusCode = 400;
+			res.data = 'Bad Request\nNo username provided';
+
+			return cb();
+		}
+
+		cb();
+	});
+
 	// Check username availibility
 	tasks.push(function (cb) {
+		if (res.statusCode !== 200 || !req.jsonBody.username) return cb();
+
 		if (user && user.username === req.jsonBody.username) {
 			req.log.debug(logPrefix + 'Previous user loaded and username change is not requested, moving on');
 
@@ -83,22 +93,9 @@ function createOrReplaceUser(req, res, cb) {
 		});
 	});
 
-	// Create new user if needed
+	// Set username if it has changed and there is an existing user
 	tasks.push(function (cb) {
-		if (user || res.statusCode !== 200) return cb();
-
-		req.userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
-			if (err) return cb(err);
-			user = result;
-			req.log.debug(logPrefix + 'New user created');
-
-			cb();
-		});
-	});
-
-	// Set username if it has changed
-	tasks.push(function (cb) {
-		if ((user && user.username === req.jsonBody.username) || res.statusCode !== 200) {
+		if (!user || (!req.jsonBody.username || (user && user.username === req.jsonBody.username)) || res.statusCode !== 200) {
 			return cb();
 		}
 
@@ -108,13 +105,26 @@ function createOrReplaceUser(req, res, cb) {
 		});
 	});
 
-	// Set fields
+	// Set fields if there is an existing user
 	tasks.push(function (cb) {
-		if (res.statusCode !== 200) return cb();
+		if (!user || res.statusCode !== 200) return cb();
 
 		user.replaceFields(req.jsonBody.fields, function (err) {
 			if (err) return cb(err);
 			req.log.debug(logPrefix + 'Fields replaced');
+			cb();
+		});
+	});
+
+	// Create new user if needed
+	tasks.push(function (cb) {
+		if (user || res.statusCode !== 200) return cb();
+
+		req.userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
+			if (err) return cb(err);
+			user = result;
+			req.log.debug(logPrefix + 'New user created');
+
 			cb();
 		});
 	});
@@ -287,6 +297,14 @@ function patchUser(req, res, cb) {
 			cb();
 		});
 	});
+
+	// Update password if specified
+	if (req.jsonBody.password !== undefined && req.jsonBody.password !== null) {
+		tasks.push(cb => {
+			if (!user || res.statusCode !== 200) return cb();
+			req.userLib.setPassword(user.uuid, req.jsonBody.password, cb);
+		});
+	}
 
 	// Update fields
 	tasks.push(function (cb) {
