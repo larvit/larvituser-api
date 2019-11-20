@@ -20,7 +20,7 @@
     "async": "^3.1.0",
     "larvitbase-api": "^0.5.1",
     "larvituser": "^0.19.0",
-	"larvitutils": "^2.3.1"
+    "larvitutils": "3.2.1"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
