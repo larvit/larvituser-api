@@ -38,17 +38,14 @@ function createOrReplaceUser(req, res, cb) {
 	if (req.jsonBody.uuid) {
 		logPrefix += 'userUuid: ' + req.jsonBody.uuid + ' - ';
 
-		tasks.push(function (cb) {
+		tasks.push(async function () {
 			req.log.debug(logPrefix + 'Trying to load previous user');
-			req.userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
-				if (err) return cb(err);
 
-				if (result) {
-					req.log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
-					user = result;
-				}
-				cb();
-			});
+			const result = await req.userLib.fromUuid(req.jsonBody.uuid);
+			if (result) {
+				req.log.debug(logPrefix + 'Previous user found, username: "' + result.username + '"');
+				user = result;
+			}
 		});
 	}
 
@@ -63,70 +60,54 @@ function createOrReplaceUser(req, res, cb) {
 			return cb();
 		}
 
-		cb();
+		return cb();
 	});
 
 	// Check username availibility
-	tasks.push(function (cb) {
-		if (res.statusCode !== 200 || !req.jsonBody.username) return cb();
+	tasks.push(async function () {
+		if (res.statusCode !== 200 || !req.jsonBody.username) return;
 
 		if (user && user.username === req.jsonBody.username) {
 			req.log.debug(logPrefix + 'Previous user loaded and username change is not requested, moving on');
 
-			return cb();
+			return;
 		}
 
-		req.userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
-			if (err) return cb(err);
-
-			if (!result) {
-				req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
-				res.statusCode = 422;
-				res.data = 'Unprocessable Entity\nUsername is taken by another user';
-
-				return cb();
-			}
-
+		const result = await req.userLib.usernameAvailable(req.jsonBody.username);
+		if (!result) {
+			req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
+			res.statusCode = 422;
+			res.data = 'Unprocessable Entity\nUsername is taken by another user';
+		} else {
 			req.log.debug(logPrefix + 'Username is available, moving on');
-
-			cb();
-		});
+		}
 	});
 
 	// Set username if it has changed and there is an existing user
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		if (!user || (!req.jsonBody.username || (user && user.username === req.jsonBody.username)) || res.statusCode !== 200) {
-			return cb();
+			return;
 		}
 
-		user.setUsername(req.jsonBody.username, function (err) {
-			if (!err) user.username = req.jsonBody.username;
-			cb(err);
-		});
+		await user.setUsername(req.jsonBody.username);
+		user.username = req.jsonBody.username;
 	});
 
 	// Set fields if there is an existing user
-	tasks.push(function (cb) {
-		if (!user || res.statusCode !== 200) return cb();
+	tasks.push(async function () {
+		if (!user || res.statusCode !== 200) return;
 
-		user.replaceFields(req.jsonBody.fields, function (err) {
-			if (err) return cb(err);
-			req.log.debug(logPrefix + 'Fields replaced');
-			cb();
-		});
+		await user.replaceFields(req.jsonBody.fields);
+		req.log.debug(logPrefix + 'Fields replaced');
 	});
 
 	// Create new user if needed
-	tasks.push(function (cb) {
-		if (user || res.statusCode !== 200) return cb();
+	tasks.push(async function () {
+		if (user || res.statusCode !== 200) return;
 
-		req.userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid, function (err, result) {
-			if (err) return cb(err);
-			user = result;
-			req.log.debug(logPrefix + 'New user created');
-
-			cb();
-		});
+		const result = await req.userLib.create(req.jsonBody.username, String(req.jsonBody.password), req.jsonBody.fields, req.jsonBody.uuid);
+		user = result;
+		req.log.debug(logPrefix + 'New user created');
 	});
 
 	async.series(tasks, function (err) {
@@ -143,7 +124,7 @@ function createOrReplaceUser(req, res, cb) {
 	});
 }
 
-function deleteUser(req, res, cb) {
+async function deleteUser(req, res, cb) {
 	// Check uuid for validity
 	req.jsonBody.uuid = lUtils.formatUuid(req.jsonBody.uuid);
 
@@ -154,14 +135,17 @@ function deleteUser(req, res, cb) {
 		return cb();
 	}
 
-	req.userLib.rmUser(req.jsonBody.uuid, function (err) {
-		if (err) return cb(err);
+	try {
+		await req.userLib.rmUser(req.jsonBody.uuid);
 		res.data = 'acknowledged';
-		cb();
-	});
+	} catch (err) {
+		return cb(err);
+	}
+
+	return cb();
 }
 
-function getUser(req, res, cb) {
+async function getUser(req, res, cb) {
 	if (req.urlParsed.query.uuid && req.urlParsed.query.username) {
 		res.statusCode = 400;
 		res.data = 'Bad Request\nOnly one of uuid and username is allowed at every single request';
@@ -186,48 +170,48 @@ function getUser(req, res, cb) {
 		}
 
 		// Fetch user
-		req.userLib.fromUuid(req.urlParsed.query.uuid, function (err, user) {
-			if (err) return cb(err);
-
+		try {
+			const user = await req.userLib.fromUuid(req.urlParsed.query.uuid);
 			if (!user) {
 				res.statusCode = 404;
 				res.data = 'Not Found';
-
-				return cb();
+			} else {
+				res.data = {
+					fields: user.fields,
+					uuid: user.uuid,
+					username: user.username,
+					passwordIsFalse: user.passwordIsFalse
+				};
 			}
+		} catch (err) {
+			return cb(err);
+		}
 
-			res.data = {
-				fields: user.fields,
-				uuid: user.uuid,
-				username: user.username,
-				passwordIsFalse: user.passwordIsFalse
-			};
-
-			cb();
-		});
+		return cb();
 	} else if (req.urlParsed.query.username) {
 		req.urlParsed.query.username = String(req.urlParsed.query.username);
 
 		// Fetch user
-		req.userLib.fromUsername(req.urlParsed.query.username, function (err, user) {
-			if (err) return cb(err);
-
+		try {
+			const user = await req.userLib.fromUsername(req.urlParsed.query.username);
 			if (!user) {
 				res.statusCode = 404;
 				res.data = 'Not Found';
 
 				return cb();
+			} else {
+				res.data = {
+					fields: user.fields,
+					uuid: user.uuid,
+					username: user.username,
+					passwordIsFalse: user.passwordIsFalse
+				};
 			}
+		} catch (err) {
+			return cb(err);
+		}
 
-			res.data = {
-				fields: user.fields,
-				uuid: user.uuid,
-				username: user.username,
-				passwordIsFalse: user.passwordIsFalse
-			};
-
-			cb();
-		});
+		return cb();
 	}
 }
 
@@ -270,47 +254,40 @@ function patchUser(req, res, cb) {
 	}
 
 	// Fetch user
-	tasks.push(function (cb) {
-		req.userLib.fromUuid(req.jsonBody.uuid, function (err, result) {
-			if (err) return cb(err);
-			user = result;
-			cb();
-		});
+	tasks.push(async function () {
+		const result = await req.userLib.fromUuid(req.jsonBody.uuid);
+		user = result;
 	});
 
 	// Check so new username is available
 	// IMPORTANT!!! That this happends before updating fields!
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		if (!user || !req.jsonBody.username || req.jsonBody.username === user.username) {
-			return cb();
+			return;
 		}
 
-		req.userLib.usernameAvailable(req.jsonBody.username, function (err, result) {
-			if (err) return cb(err);
-
-			if (!result) {
-				req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
-				res.statusCode = 422;
-				res.data = 'Unprocessable Entity\nUsername is taken by another user';
-			}
-
-			cb();
-		});
+		const result = await req.userLib.usernameAvailable(req.jsonBody.username);
+		if (!result) {
+			req.log.verbose(logPrefix + 'Username "' + req.jsonBody.username + '" is already taken by another user');
+			res.statusCode = 422;
+			res.data = 'Unprocessable Entity\nUsername is taken by another user';
+		}
 	});
 
 	// Update password if specified
 	if (req.jsonBody.password !== undefined && req.jsonBody.password !== null) {
-		tasks.push(cb => {
-			if (!user || res.statusCode !== 200) return cb();
-			req.userLib.setPassword(user.uuid, req.jsonBody.password, cb);
+		tasks.push(async function () {
+			if (!user || res.statusCode !== 200) return;
+
+			await req.userLib.setPassword(user.uuid, req.jsonBody.password);
 		});
 	}
 
 	// Update fields
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		const newFields = {};
 
-		if (!user || !req.jsonBody.fields || res.statusCode !== 200) return cb();
+		if (!user || !req.jsonBody.fields || res.statusCode !== 200) return;
 
 		for (const fieldName of Object.keys(user.fields)) {
 			newFields[fieldName] = user.fields[fieldName];
@@ -320,16 +297,16 @@ function patchUser(req, res, cb) {
 			newFields[fieldName] = req.jsonBody.fields[fieldName];
 		}
 
-		user.replaceFields(newFields, cb);
+		await user.replaceFields(newFields);
 	});
 
 	// Update username
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		if (!user || !req.jsonBody.username || req.jsonBody.username === user.username || res.statusCode !== 200) {
-			return cb();
+			return;
 		}
 
-		user.setUsername(req.jsonBody.username, cb);
+		await user.setUsername(req.jsonBody.username);
 	});
 
 	async.series(tasks, function (err) {

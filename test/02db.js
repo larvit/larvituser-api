@@ -1,8 +1,9 @@
 'use strict';
 
 const test = require('tape');
-const db = require('larvitdb');
+const Db = require('larvitdb');
 const {Log} = require('larvitutils');
+const fixture = require('./fixture');
 
 let options;
 
@@ -16,13 +17,9 @@ if (!options.log) {
 	options.log = new Log('warn');
 }
 
-test('Check db', function (t) {
-	db.setup(options, function (err) {
-		if (err) throw err;
+test('Init db', async function () {
+	const db = new Db(options);
+	await db.removeAllTables();
 
-		db.removeAllTables(function (err) {
-			if (err) throw err;
-			t.end();
-		});
-	});
+	fixture.db = db;
 });

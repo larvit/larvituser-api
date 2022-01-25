@@ -2,16 +2,14 @@
 
 const UserApi = require(__dirname + '/../index.js');
 const test = require('tape');
-const db = require('larvitdb');
+const fixture = require('./fixture');
 
 test('Close API and clean db', function (t) {
-	UserApi.instance.stop(function (err) {
+	UserApi.instance.stop(async function (err) {
 		if (err) throw err;
 
-		db.removeAllTables(function (err) {
-			if (err) throw err;
-			t.end();
-			process.exit(0);
-		});
+		await fixture.db.removeAllTables();
+		t.end();
+		process.exit(0);
 	});
 });

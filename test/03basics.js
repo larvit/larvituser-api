@@ -1,44 +1,25 @@
 'use strict';
 
 const UserApi = require(__dirname + '/../index.js');
-const UserLib = require('larvituser');
+const {UserLib} = require('larvituser');
 const {Log} = require('larvitutils');
+const fixture = require('./fixture');
 const request = require('request');
 const async = require('async');
 const test = require('tape');
-const db = require('larvitdb');
 const fs = require('fs');
-const options = {
-	amqp: { default: 'loopback interface' },
-	amsync: {},
-	log: new Log('warn'),
-	db: db
-};
 
-let dbOptions;
+let options;
 
-if (process.env.DBCONFFILE === undefined) {
-	dbOptions = require(__dirname + '/../config/db_test.json');
-} else {
-	dbOptions = require(__dirname + '/../' + process.env.DBCONFFILE);
-}
+test('Init userlib', async function () {
+	options = {
+		log: new Log('warn'),
+		db: fixture.db
+	};
 
-if (!dbOptions.log) {
-	dbOptions.log = new Log('warn');
-}
-
-test('Init db', function (t) {
-	db.setup(dbOptions, t.end);
-});
-
-test('Init userlib', function (t) {
-	const userLib = new UserLib(options, function (err) {
-		if (err) throw err;
-
-		UserLib.instance = userLib;
-
-		t.end();
-	});
+	const userLib = new UserLib(options);
+	await userLib.runDbMigrations();
+	UserLib.instance = userLib;
 });
 
 test('Trying to start API without options', function (t) {

@@ -1,29 +1,19 @@
 'use strict';
 
 const UserApi = require(__dirname + '/../index.js');
-const UserLib = require('larvituser');
+const {UserLib, Users} = require('larvituser');
+const fixture = require('./fixture');
 const request = require('request');
 const uuidv4 = require('uuid/v4');
 const async = require('async');
 const test = require('tape');
 
-test('Create users to list', function (t) {
-	const tasks = [];
-
+test('Create users to list', async function () {
 	for (let i = 0; i < 3; i++) {
-		tasks.push(function (cb) {
-			UserLib.instance.create('user-' + i, 'password-' + i, { firstName: 'Benkt-' + i, lastname: 'Usersson-' + i, code: i}, uuidv4(), cb);
-		});
+		await UserLib.instance.create('user-' + i, 'password-' + i, { firstName: 'Benkt-' + i, lastname: 'Usersson-' + i, code: i}, uuidv4());
 	}
 
-	tasks.push(function (cb) {
-		UserLib.instance.create('user-nisse', 'password-nisse', { firstName: 'Nissersson', lastname: 'Testsson', code: '0'}, uuidv4(), cb);
-	});
-
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await UserLib.instance.create('user-nisse', 'password-nisse', { firstName: 'Nissersson', lastname: 'Testsson', code: '0'}, uuidv4());
 });
 
 test('Only allow GET', function (t) {
@@ -68,20 +58,13 @@ test('List users', function (t) {
 	});
 });
 
-test('Get users based on uuid', function (t) {
+test('Get users based on uuid', async function (t) {
 	const tasks = [];
 
-	let users;
-
-	tasks.push(function (cb) {
-		new UserLib.Users({
-			log: UserLib.instance.options.log,
-			db: UserLib.instance.options.db
-		}).get(function (err, result) {
-			users = result;
-			cb(err);
-		});
-	});
+	const {users} = await new Users({
+		log: UserLib.instance.options.log,
+		db: fixture.db
+	}).get();
 
 	// Get one user
 	tasks.push(function (cb) {
@@ -145,10 +128,7 @@ test('Get users based on uuid', function (t) {
 		});
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('Get users with limit', function (t) {
@@ -223,8 +203,8 @@ test('Get users and fields', function (t) {
 			t.equal(body.result.length, 4);
 
 			for (const user of body.result) {
-				t.notEqual(user.firstName, undefined);
-				t.equal(user.firstName.length, 1);
+				t.notEqual(user.fields.firstName, undefined);
+				t.equal(user.fields.firstName.length, 1);
 			}
 
 			cb();
@@ -255,20 +235,20 @@ test('Get users and several fields using comma separated list', function (t) {
 
 			t.equal(response.statusCode, 200);
 			t.equal(body.result.length, 4);
-			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-0'));
-			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-1'));
-			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-2'));
-			t.ok(body.result.find(user => String(user.firstName) === 'Nissersson'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-0'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-1'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-2'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Testsson'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Benkt-0'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Benkt-1'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Benkt-2'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Nissersson'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Usersson-0'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Usersson-1'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Usersson-2'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Testsson'));
 
 			for (const user of body.result) {
-				t.notEqual(user.firstName, undefined);
-				t.equal(user.firstName.length, 1);
-				t.notEqual(user.lastName, undefined);
-				t.equal(user.lastName.length, 1);
+				t.notEqual(user.fields.firstName, undefined);
+				t.equal(user.fields.firstName.length, 1);
+				t.notEqual(user.fields.lastName, undefined);
+				t.equal(user.fields.lastName.length, 1);
 			}
 
 			cb();
@@ -296,20 +276,20 @@ test('Get users and several fields using multiple query parameters', function (t
 
 			t.equal(response.statusCode, 200);
 			t.equal(body.result.length, 4);
-			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-0'));
-			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-1'));
-			t.ok(body.result.find(user => String(user.firstName) === 'Benkt-2'));
-			t.ok(body.result.find(user => String(user.firstName) === 'Nissersson'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-0'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-1'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Usersson-2'));
-			t.ok(body.result.find(user => String(user.lastName) === 'Testsson'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Benkt-0'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Benkt-1'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Benkt-2'));
+			t.ok(body.result.find(user => String(user.fields.firstName) === 'Nissersson'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Usersson-0'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Usersson-1'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Usersson-2'));
+			t.ok(body.result.find(user => String(user.fields.lastName) === 'Testsson'));
 
 			for (const user of body.result) {
-				t.notEqual(user.firstName, undefined);
-				t.equal(user.firstName.length, 1);
-				t.notEqual(user.lastName, undefined);
-				t.equal(user.lastName.length, 1);
+				t.notEqual(user.fields.firstName, undefined);
+				t.equal(user.fields.firstName.length, 1);
+				t.notEqual(user.fields.lastName, undefined);
+				t.equal(user.fields.lastName.length, 1);
 			}
 
 			cb();
@@ -469,7 +449,7 @@ test('Get users ordered by a field value', function (t) {
 			t.equal(response.statusCode, 200);
 			t.equal(body.totalElements, 4);
 			t.equal(body.result[0].username, 'user-0');
-			t.equal(body.result[0].firstName[0], 'Benkt-0');
+			t.equal(body.result[0].fields.firstName[0], 'Benkt-0');
 
 			cb();
 		});
@@ -489,7 +469,7 @@ test('Get users ordered by a field value', function (t) {
 			t.equal(response.statusCode, 200);
 			t.equal(body.totalElements, 4);
 			t.equal(body.result[0].username, 'user-nisse');
-			t.equal(body.result[0].firstName[0], 'Nissersson');
+			t.equal(body.result[0].fields.firstName[0], 'Nissersson');
 
 			cb();
 		});

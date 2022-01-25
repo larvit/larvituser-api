@@ -1,6 +1,6 @@
 {
   "name": "larvituser-api",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "description": "REST api built on top of larvituser",
   "author": {
     "name": "Klas Espenkrona",
@@ -16,20 +16,19 @@
   ],
   "private": false,
   "dependencies": {
-    "argparse": "~1.0.9",
-    "async": "^3.1.0",
-    "larvitbase-api": "^0.5.1",
-    "larvituser": "^0.19.0",
-    "larvitutils": "3.2.1"
+    "async": "^3.2.3",
+    "larvitbase-api": "^0.5.6",
+    "larvituser": "^0.20.4",
+    "larvitutils": "5.0.0"
   },
   "devDependencies": {
-    "coveralls": "^3.0.0",
-    "eslint": "^6.4.0",
+    "coveralls": "^3.1.1",
+    "eslint": "^8.7.0",
     "freeport": "^1.0.5",
     "istanbul": "^0.4.5",
+    "larvitdb": "^3.2.0",
     "request": "^2.88.0",
-    "tape": "^4.9.1",
-    "tape-eslint": "^1.2.1"
+    "tape": "^5.4.1"
   },
   "keywords": [
     "user",
@@ -49,7 +48,9 @@
   },
   "homepage": "https://github.com/larvit/larvituser-api",
   "scripts": {
-    "test": "./node_modules/tape/bin/tape ./test/*"
+    "lint": "eslint '*.js' 'test/*.js' 'controllers/**/*.js'",
+    "test": "npm run lint && npm run test:unit",
+    "test:unit": "./node_modules/tape/bin/tape ./test/*"
   },
   "license": "ISC",
   "maintainers": [

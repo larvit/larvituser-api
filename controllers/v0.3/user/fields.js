@@ -2,7 +2,7 @@
 
 const lUtils = new (require('larvitutils').Utils)();
 
-function controller(req, res, cb) {
+async function controller(req, res, cb) {
 	if (req.method.toUpperCase() !== 'GET') {
 		res.statusCode = 405;
 		res.data = '405 Method Not Allowed\nAllowed method(s): GET';
@@ -10,9 +10,8 @@ function controller(req, res, cb) {
 		return cb();
 	}
 
-	req.db.query('SELECT * FROM user_data_fields ORDER BY name', function (err, rows) {
-		if (err) return cb(err);
-
+	try {
+		const {rows} = await req.db.query('SELECT * FROM user_data_fields ORDER BY name');
 		res.data = [];
 
 		for (let i = 0; rows[i] !== undefined; i++) {
@@ -23,9 +22,11 @@ function controller(req, res, cb) {
 				name: row.name
 			});
 		}
+	} catch (err) {
+		return cb(err);
+	}
 
-		cb();
-	});
+	return cb();
 };
 
 exports = module.exports = controller;

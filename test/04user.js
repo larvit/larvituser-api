@@ -1,13 +1,13 @@
 'use strict';
 
 const UserApi = require(__dirname + '/../index.js');
-const UserLib = require('larvituser');
+const {UserLib} = require('larvituser');
 const request = require('request');
 const uuidv1 = require('uuid/v1');
 const lUtils = new (require('larvitutils').Utils)();
+const fixture = require('./fixture');
 const async = require('async');
 const test = require('tape');
-const db = require('larvitdb');
 
 test('Invalid method', function (t) {
 	const reqOptions = {};
@@ -137,18 +137,13 @@ test('PUT user, create new', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(rows[0].username, 'foo');
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users');
+		t.equal(rows.length, 1);
+		t.equal(rows[0].username, 'foo');
 	});
 
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		let sql = '';
 
 		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
@@ -157,19 +152,14 @@ test('PUT user, create new', function (t) {
 		sql += ' JOIN user_data_fields f ON f.uuid = ud.fieldUuid\n';
 		sql += 'ORDER BY ud.data';
 
-		db.query(sql, function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 2);
-			t.equal(rows[0].username, 'foo');
-			t.equal(rows[0].fieldName, 'lastName');
-			t.equal(rows[0].data, 'Bengtsson');
-			t.equal(rows[1].username, 'foo');
-			t.equal(rows[1].fieldName, 'firstName');
-			t.equal(rows[1].data, 'Bosse');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql);
+		t.equal(rows.length, 2);
+		t.equal(rows[0].username, 'foo');
+		t.equal(rows[0].fieldName, 'lastName');
+		t.equal(rows[0].data, 'Bengtsson');
+		t.equal(rows[1].username, 'foo');
+		t.equal(rows[1].fieldName, 'firstName');
+		t.equal(rows[1].data, 'Bosse');
 	});
 
 	// Try to create a new user with conflicting username
@@ -202,16 +192,12 @@ test('PUT user, create new', function (t) {
 	});
 });
 
-test('PUT user, update user', function (t) {
+test('PUT user, update user', async function (t) {
 	const userUuid = uuidv1();
-
-
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('putUserUpdate', 'fomme', {bing: 'bong'}, userUuid, cb);
-	});
+	await UserLib.instance.create('putUserUpdate', 'fomme', {bing: 'bong'}, userUuid);
 
 	// Run request
 	tasks.push(function (cb) {
@@ -242,18 +228,13 @@ test('PUT user, update user', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users WHERE username = \'putUserUpdate_updated\'', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(rows[0].username, 'putUserUpdate_updated');
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users WHERE username = \'putUserUpdate_updated\'');
+		t.equal(rows.length, 1);
+		t.equal(rows[0].username, 'putUserUpdate_updated');
 	});
 
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		let sql = '';
 
 		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
@@ -263,34 +244,22 @@ test('PUT user, update user', function (t) {
 		sql += 'WHERE u.username = ?\n';
 		sql += 'ORDER BY ud.data';
 
-		db.query(sql, ['putUserUpdate_updated'], function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(rows[0].username, 'putUserUpdate_updated');
-			t.equal(rows[0].fieldName, 'flaff');
-			t.equal(rows[0].data, 'brånk');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql, ['putUserUpdate_updated']);
+		t.equal(rows.length, 1);
+		t.equal(rows[0].username, 'putUserUpdate_updated');
+		t.equal(rows[0].fieldName, 'flaff');
+		t.equal(rows[0].data, 'brånk');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
-test('PUT user, update user but not username', function (t) {
+test('PUT user, update user but not username', async function (t) {
 	const userUuid = uuidv1();
-
-
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('putUserUpdate_notUsername', 'fomme', {bing: 'bong'}, userUuid, cb);
-	});
+	await UserLib.instance.create('putUserUpdate_notUsername', 'fomme', {bing: 'bong'}, userUuid);
 
 	// Run request
 	tasks.push(function (cb) {
@@ -320,18 +289,13 @@ test('PUT user, update user but not username', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users WHERE username = \'putUserUpdate_notUsername\'', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users WHERE username = \'putUserUpdate_notUsername\'');
+		t.equal(rows.length, 1);
+		t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
 	});
 
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		let sql = '';
 
 		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
@@ -341,22 +305,14 @@ test('PUT user, update user but not username', function (t) {
 		sql += 'WHERE u.username = ?\n';
 		sql += 'ORDER BY ud.data';
 
-		db.query(sql, ['putUserUpdate_notUsername'], function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(rows[0].username, 'putUserUpdate_notUsername');
-			t.equal(rows[0].fieldName, 'flaff');
-			t.equal(rows[0].data, 'brånk');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql, ['putUserUpdate_notUsername']);
+		t.equal(rows.length, 1);
+		t.equal(rows[0].username, 'putUserUpdate_notUsername');
+		t.equal(rows[0].fieldName, 'flaff');
+		t.equal(rows[0].data, 'brånk');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('PUT without body', function (t) {
@@ -451,16 +407,12 @@ test('GET user, malformed statements', function (t) {
 	});
 });
 
-test('GET user', function (t) {
+test('GET user', async function (t) {
 	const userUuid = uuidv1();
-
-
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('getUser', 'stolle', {baj: 'en'}, userUuid, cb);
-	});
+	await UserLib.instance.create('getUser', 'stolle', {baj: 'en'}, userUuid);
 
 	// Get by uuid
 	tasks.push(function (cb) {
@@ -538,10 +490,7 @@ test('GET user', function (t) {
 		});
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('PATCH user, malformed statements', function (t) {
@@ -635,34 +584,30 @@ test('PATCH user, malformed statements', function (t) {
 	});
 
 	// Username taken
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		const username = uuidv1();
 
-		UserLib.instance.create(username, 'foo', {bar: 'baz'}, function (err, firstUser) {
-			if (err) return cb(err);
+		const firstUser = await UserLib.instance.create(username, 'foo', {bar: 'baz'});
+		const secondUser = await UserLib.instance.create(uuidv1(), 'foo', {bar: 'baz'});
+		const reqOptions = {};
 
-			UserLib.instance.create(uuidv1(), 'foo', {bar: 'baz'}, function (err, secondUser) {
-				const reqOptions = {};
+		t.notEqual(firstUser.uuid, secondUser.uuid);
 
-				if (err) return cb(err);
+		reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
+		reqOptions.method = 'PATCH';
+		reqOptions.body = {};
+		reqOptions.body.uuid = secondUser.uuid;
+		reqOptions.body.username = username;
+		reqOptions.json = true;
 
-				t.notEqual(firstUser.uuid, secondUser.uuid);
+		await new Promise((res, rej) => {
+			request(reqOptions, function (err, response, body) {
+				if (err) return rej(err);
 
-				reqOptions.url = 'http://localhost:' + UserApi.instance.api.base.httpServer.address().port + '/user';
-				reqOptions.method = 'PATCH';
-				reqOptions.body = {};
-				reqOptions.body.uuid = secondUser.uuid;
-				reqOptions.body.username = username;
-				reqOptions.json = true;
+				t.equal(response.statusCode, 422);
+				t.equal(body, 'Unprocessable Entity\nUsername is taken by another user');
 
-				request(reqOptions, function (err, response, body) {
-					if (err) return cb(err);
-
-					t.equal(response.statusCode, 422);
-					t.equal(body, 'Unprocessable Entity\nUsername is taken by another user');
-
-					cb();
-				});
+				res();
 			});
 		});
 	});
@@ -696,16 +641,12 @@ test('PATCH user, malformed statements', function (t) {
 	});
 });
 
-test('PATCH user - fields', function (t) {
+test('PATCH user - fields', async function (t) {
 	const userUuid = uuidv1();
-
-
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('patchUser', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid, cb);
-	});
+	await UserLib.instance.create('patchUser', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid);
 
 	// Run request
 	tasks.push(function (cb) {
@@ -739,19 +680,14 @@ test('PATCH user - fields', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users WHERE username = \'patchUser\'', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
-			t.equal(rows[0].username, 'patchUser');
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users WHERE username = \'patchUser\'');
+		t.equal(rows.length, 1);
+		t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
+		t.equal(rows[0].username, 'patchUser');
 	});
 
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		let sql = '';
 
 		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
@@ -761,38 +697,26 @@ test('PATCH user - fields', function (t) {
 		sql += 'WHERE u.username = ?\n';
 		sql += 'ORDER BY ud.data';
 
-		db.query(sql, ['patchUser'], function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 3);
-			t.equal(rows[0].username, 'patchUser');
-			t.equal(rows[0].fieldName, 'bing');
-			t.equal(rows[0].data, 'bong');
-			t.equal(rows[1].fieldName, 'palt');
-			t.equal(rows[1].data, 'korv');
-			t.equal(rows[2].fieldName, 'beff');
-			t.equal(rows[2].data, 'yes');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql, ['patchUser']);
+		t.equal(rows.length, 3);
+		t.equal(rows[0].username, 'patchUser');
+		t.equal(rows[0].fieldName, 'bing');
+		t.equal(rows[0].data, 'bong');
+		t.equal(rows[1].fieldName, 'palt');
+		t.equal(rows[1].data, 'korv');
+		t.equal(rows[2].fieldName, 'beff');
+		t.equal(rows[2].data, 'yes');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
-test('PATCH user - username', function (t) {
+test('PATCH user - username', async function (t) {
 	const userUuid = uuidv1();
-
-
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('patchUser_username', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid, cb);
-	});
+	await UserLib.instance.create('patchUser_username', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid);
 
 	// Run request
 	tasks.push(function (cb) {
@@ -822,18 +746,13 @@ test('PATCH user - username', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users WHERE username = \'patchUser_username_updated\'', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users WHERE username = \'patchUser_username_updated\'');
+		t.equal(rows.length, 1);
+		t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
 	});
 
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		let sql = '';
 
 		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
@@ -843,33 +762,23 @@ test('PATCH user - username', function (t) {
 		sql += 'WHERE u.username = ?\n';
 		sql += 'ORDER BY ud.data';
 
-		db.query(sql, ['patchUser_username_updated'], function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 2);
-			t.equal(rows[0].fieldName, 'bing');
-			t.equal(rows[0].data, 'bong');
-			t.equal(rows[1].fieldName, 'palt');
-			t.equal(rows[1].data, 'koma');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql, ['patchUser_username_updated']);
+		t.equal(rows.length, 2);
+		t.equal(rows[0].fieldName, 'bing');
+		t.equal(rows[0].data, 'bong');
+		t.equal(rows[1].fieldName, 'palt');
+		t.equal(rows[1].data, 'koma');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
-test('PATCH user - password', function (t) {
+test('PATCH user - password', async function (t) {
 	const userUuid = uuidv1();
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('patchUser_password', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid, cb);
-	});
+	await UserLib.instance.create('patchUser_password', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid);
 
 	// Run request
 	tasks.push(function (cb) {
@@ -891,36 +800,23 @@ test('PATCH user - password', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users WHERE username = \'patchUser_password\'', function (err, rows) {
-			if (err) return cb(err);
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users WHERE username = \'patchUser_password\'');
 
-			t.equal(rows.length, 1);
-			UserLib.instance.checkPassword('newpass', rows[0].password, (err, result) => {
-				if (err) return cb(err);
-				t.equal(result, true);
-
-				cb();
-			});
-		});
+		t.equal(rows.length, 1);
+		const result = await UserLib.instance.checkPassword('newpass', rows[0].password);
+		t.equal(result, true);
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
-test('PATCH user - username and fields', function (t) {
+test('PATCH user - username and fields', async function (t) {
 	const userUuid = uuidv1();
-
-
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('patchUser_username_and_fields', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid, cb);
-	});
+	await UserLib.instance.create('patchUser_username_and_fields', 'dkfalls', {bing: 'bong', palt: 'koma'}, userUuid);
 
 	// Run request
 	tasks.push(function (cb) {
@@ -955,18 +851,13 @@ test('PATCH user - username and fields', function (t) {
 	});
 
 	// Check data in database
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_users WHERE username = \'patchUser_username_and_fields_updated\'', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 1);
-			t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_users WHERE username = \'patchUser_username_and_fields_updated\'');
+		t.equal(rows.length, 1);
+		t.equal(lUtils.formatUuid(rows[0].uuid), userUuid);
 	});
 
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		let sql = '';
 
 		sql += 'SELECT u.username, f.name AS fieldName, ud.data\n';
@@ -976,26 +867,18 @@ test('PATCH user - username and fields', function (t) {
 		sql += 'WHERE u.username = ?\n';
 		sql += 'ORDER BY ud.data';
 
-		db.query(sql, ['patchUser_username_and_fields_updated'], function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 3);
-			t.equal(rows[0].username, 'patchUser_username_and_fields_updated');
-			t.equal(rows[0].fieldName, 'bing');
-			t.equal(rows[0].data, 'bong');
-			t.equal(rows[1].fieldName, 'palt');
-			t.equal(rows[1].data, 'korv');
-			t.equal(rows[2].fieldName, 'beff');
-			t.equal(rows[2].data, 'yes');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql, ['patchUser_username_and_fields_updated']);
+		t.equal(rows.length, 3);
+		t.equal(rows[0].username, 'patchUser_username_and_fields_updated');
+		t.equal(rows[0].fieldName, 'bing');
+		t.equal(rows[0].data, 'bong');
+		t.equal(rows[1].fieldName, 'palt');
+		t.equal(rows[1].data, 'korv');
+		t.equal(rows[2].fieldName, 'beff');
+		t.equal(rows[2].data, 'yes');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('DELETE USER, malformed statements', function (t) {
@@ -1018,14 +901,12 @@ test('DELETE USER, malformed statements', function (t) {
 	});
 });
 
-test('DELETE user', function (t) {
+test('DELETE user', async function (t) {
 	const userUuid = uuidv1();
 	const tasks = [];
 
 	// Create user
-	tasks.push(function (cb) {
-		UserLib.instance.create('deleteUser', 'stolle', {weng: 'wong'}, userUuid, cb);
-	});
+	await UserLib.instance.create('deleteUser', 'stolle', {weng: 'wong'}, userUuid);
 
 	// Delete
 	tasks.push(function (cb) {
@@ -1050,28 +931,17 @@ test('DELETE user', function (t) {
 	// Check database
 	tasks.push(function (cb) {
 		// Seems we might have some kind of race condition here... or cache... or something else
-		setTimeout(function () {
-			db.query('SELECT uuid FROM user_users WHERE username = ?', 'deleteUser', function (err, rows) {
-				if (err) return cb(err);
-
-				t.equal(rows.length, 0);
-				cb();
-			});
+		setTimeout(async function () {
+			const {rows} = await fixture.db.query('SELECT uuid FROM user_users WHERE username = ?', 'deleteUser');
+			t.equal(rows.length, 0);
+			cb();
 		}, 50);
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
-test('Clear users and users data', function (t) {
-	db.query('DELETE FROM user_users_data', function (err) {
-		if (err) throw err;
-		db.query('DELETE FROM user_users', function (err) {
-			if (err) throw err;
-			t.end();
-		});
-	});
+test('Clear users and users data', async function () {
+	await fixture.db.query('DELETE FROM user_users_data');
+	await fixture.db.query('DELETE FROM user_users');
 });

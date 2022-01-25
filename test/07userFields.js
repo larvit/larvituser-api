@@ -6,7 +6,7 @@ const uuidv4 = require('uuid/v4');
 const lUtils = new (require('larvitutils').Utils)();
 const async = require('async');
 const test = require('tape');
-const db = require('larvitdb');
+const fixture = require('./fixture');
 
 test('GET user field names', function (t) {
 	const localFieldNames = [];
@@ -18,7 +18,7 @@ test('GET user field names', function (t) {
 	localFieldNames.push('And another yet so. 9999d9faxx');
 
 	// Make sure there are at least one field in the database
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		const dbFields = [];
 		const sql = 'INSERT INTO user_data_fields (uuid, name) VALUES(?,?),(?,?);';
 
@@ -27,15 +27,13 @@ test('GET user field names', function (t) {
 		dbFields.push(lUtils.uuidToBuffer(uuidv4()));
 		dbFields.push(localFieldNames[1]);
 
-		db.query(sql, dbFields, cb);
+		await fixture.db.query(sql, dbFields);
 	});
 
 	// Get local database records
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_data_fields ORDER BY name', function (err, rows) {
-			localRecords = rows;
-			cb(err);
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_data_fields ORDER BY name');
+		localRecords = rows;
 	});
 
 	// Request API and check results against local database

@@ -54,9 +54,9 @@ function createOrReplaceRight(req, res, cb) {
 	}
 
 	if (dbFields.length) {
-		tasks.push(function (cb) {
+		tasks.push(async function () {
 			sql = sql.substring(0, sql.length - 1);
-			req.db.query(sql, dbFields, cb);
+			await req.db.query(sql, dbFields);
 		});
 	}
 
@@ -107,19 +107,18 @@ function deleteRight(req, res, cb) {
 	}
 
 	if (dbFields.length) {
-		tasks.push(function (cb) {
+		tasks.push(async function () {
 			sql = sql.substring(0, sql.length - 3);
-			req.db.query(sql, dbFields, cb);
+			await req.db.query(sql, dbFields);
 		});
 	}
 
 	async.series(tasks, cb);
 }
 
-function getRolesRights(req, res, cb) {
-	req.db.query('SELECT * FROM user_roles_rights ORDER BY role', function (err, rows) {
-		if (err) return cb(err);
-
+async function getRolesRights(req, res, cb) {
+	try {
+		const {rows} = await req.db.query('SELECT * FROM user_roles_rights ORDER BY role');
 		res.data = [];
 
 		for (let i = 0; rows[i] !== undefined; i++) {
@@ -130,9 +129,11 @@ function getRolesRights(req, res, cb) {
 
 			res.data.push(bodyPart);
 		}
+	} catch (err) {
+		return cb(err);
+	}
 
-		cb();
-	});
+	return cb();
 }
 
 function controller(req, res, cb) {

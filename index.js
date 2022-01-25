@@ -1,8 +1,7 @@
 'use strict';
 
 const topLogPrefix = 'larvituser-api: ' + __filename + ' - ';
-const Intercom = require('larvitamintercom');
-const UserLib = require('larvituser');
+const {UserLib} = require('larvituser');
 const {Log} = require('larvitutils');
 const Api = require('larvitbase-api');
 
@@ -51,59 +50,41 @@ function UserApi(options) {
 	});
 };
 
-UserApi.prototype.start = function (cb) {
+UserApi.prototype.start = async function (cb) {
 	const logPrefix = topLogPrefix + 'Api.prototype.start() - ';
 	const that = this;
 
 	if (!cb) cb = function () {};
 
-	let intercom;
+	function getUserLibInstance() {
+		if (that.options.userLib) {
+			return that.options.userLib;
+		}
 
-	if (that.options.intercom) {
-		intercom = that.options.intercom;
-	} else if (that.options.amqp && that.options.amqp.default) {
-		intercom = new Intercom({
-			conStr: that.options.amqp.default,
+		const userLib = new UserLib({
+			db: that.options.db,
 			log: that.options.log
 		});
+
+		return userLib;
 	}
 
-	function getUserLibInstance() {
-		return new Promise((resolve, reject) => {
-			if (that.options.userLib) {
-				resolve(that.options.userLib);
+	try {
+		const userLib = getUserLibInstance();
+		await userLib.runDbMigrations();
 
-				return;
-			}
-
-			const userLib = new UserLib({
-				db: that.options.db,
-				log: that.options.log,
-				intercom: intercom,
-				mode: that.options.mode,
-				amsyc: that.options.amsync
-			}, function (err) {
-				if (err) return reject(err);
-				resolve(userLib);
-			});
+		that.api.middleware.splice(1, 0, function (req, res, cb) {
+			req.userLib = userLib;
+			req.log = that.options.log;
+			req.db = that.options.db;
+			cb();
 		});
+	} catch (err) {
+		return cb(err);
 	}
 
-	getUserLibInstance()
-		.then(userLib => {
-			that.api.middleware.splice(1, 0, function (req, res, cb) {
-				req.userLib = userLib;
-				req.log = that.options.log;
-				req.db = that.options.db;
-				cb();
-			});
-
-			that.options.log.info(logPrefix + '===--- Larvituser-api starting ---===');
-			that.api.start(cb);
-		})
-		.catch(err => {
-			return cb(err);
-		});
+	that.options.log.info(logPrefix + '===--- Larvituser-api starting ---===');
+	that.api.start(cb);
 };
 
 UserApi.prototype.stop = function (cb) {

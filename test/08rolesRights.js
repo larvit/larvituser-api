@@ -1,10 +1,10 @@
 'use strict';
 
 const UserApi = require(__dirname + '/../index.js');
+const fixture = require('./fixture');
 const request = require('request');
 const async = require('async');
 const test = require('tape');
-const db = require('larvitdb');
 
 test('PUT roles rights', function (t) {
 	const tasks = [];
@@ -28,17 +28,12 @@ test('PUT roles rights', function (t) {
 	});
 
 	// Check database for the role
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		const sql = 'SELECT * FROM user_roles_rights WHERE role = \'someRule\'';
 
-		db.query(sql, function (err, rows) {
-			if (err) throw err;
-
-			t.equal(rows.length, 1);
-			t.equal(rows[0].uri, '^regexValue$');
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql);
+		t.equal(rows.length, 1);
+		t.equal(rows[0].uri, '^regexValue$');
 	});
 
 	async.series(tasks, function (err) {
@@ -47,13 +42,11 @@ test('PUT roles rights', function (t) {
 	});
 });
 
-test('PUT several rights', function (t) {
+test('PUT several rights', async function (t) {
 	const tasks = [];
 
 	// Empty database
-	tasks.push(function (cb) {
-		db.query('DELETE FROM user_roles_rights', cb);
-	});
+	await fixture.db.query('DELETE FROM user_roles_rights');
 
 	// Request API and check results against local database
 	tasks.push(function (cb) {
@@ -76,22 +69,14 @@ test('PUT several rights', function (t) {
 	});
 
 	// Check database for the role
-	tasks.push(function (cb) {
+	tasks.push(async function () {
 		const sql = 'SELECT * FROM user_roles_rights';
 
-		db.query(sql, function (err, rows) {
-			if (err) throw err;
-
-			t.equal(rows.length, 3);
-
-			cb();
-		});
+		const {rows} = await fixture.db.query(sql);
+		t.equal(rows.length, 3);
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('PUT invalid bodies', function (t) {
@@ -171,18 +156,14 @@ test('PUT invalid bodies', function (t) {
 	});
 });
 
-test('DELETE one role right', function (t) {
+test('DELETE one role right', async function (t) {
 	const tasks = [];
 
 	// Empty database
-	tasks.push(function (cb) {
-		db.query('DELETE FROM user_roles_rights', cb);
-	});
+	await fixture.db.query('DELETE FROM user_roles_rights');
 
 	// Add a a few roles
-	tasks.push(function (cb) {
-		db.query('INSERT INTO user_roles_rights VALUES(\'aaa\',\'^bu$\'),(\'aaa\',\'^leffe$\'),(\'bbb\',\'^skev$\')', cb);
-	});
+	await fixture.db.query('INSERT INTO user_roles_rights VALUES(\'aaa\',\'^bu$\'),(\'aaa\',\'^leffe$\'),(\'bbb\',\'^skev$\')');
 
 	// Run REST query
 	tasks.push(function (cb) {
@@ -203,38 +184,26 @@ test('DELETE one role right', function (t) {
 	});
 
 	// Check database contents
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_roles_rights', function (err, rows) {
-			if (err) return cb(err);
-
-			t.equal(rows.length, 2);
-			t.equal(rows[0].role, 'aaa');
-			t.equal(rows[0].uri, '^bu$');
-			t.equal(rows[1].role, 'bbb');
-			t.equal(rows[1].uri, '^skev$');
-
-			cb();
-		});
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_roles_rights');
+		t.equal(rows.length, 2);
+		t.equal(rows[0].role, 'aaa');
+		t.equal(rows[0].uri, '^bu$');
+		t.equal(rows[1].role, 'bbb');
+		t.equal(rows[1].uri, '^skev$');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
-test('DELETE two roles rights', function (t) {
+test('DELETE two roles rights', async function (t) {
 	const tasks = [];
 
 	// Empty database
-	tasks.push(function (cb) {
-		db.query('DELETE FROM user_roles_rights', cb);
-	});
+	await fixture.db.query('DELETE FROM user_roles_rights');
 
 	// Add a a few roles
-	tasks.push(function (cb) {
-		db.query('INSERT INTO user_roles_rights VALUES(\'aaa\',\'^bu$\'),(\'aaa\',\'^leffe$\'),(\'bbb\',\'^skev$\')', cb);
-	});
+	await fixture.db.query('INSERT INTO user_roles_rights VALUES(\'aaa\',\'^bu$\'),(\'aaa\',\'^leffe$\'),(\'bbb\',\'^skev$\')');
 
 	// Run REST query
 	tasks.push(function (cb) {
@@ -257,22 +226,15 @@ test('DELETE two roles rights', function (t) {
 	});
 
 	// Check database contents
-	tasks.push(function (cb) {
-		db.query('SELECT * FROM user_roles_rights', function (err, rows) {
-			if (err) return cb(err);
+	tasks.push(async function () {
+		const {rows} = await fixture.db.query('SELECT * FROM user_roles_rights');
 
-			t.equal(rows.length, 1);
-			t.equal(rows[0].role, 'aaa');
-			t.equal(rows[0].uri, '^bu$');
-
-			cb();
-		});
+		t.equal(rows.length, 1);
+		t.equal(rows[0].role, 'aaa');
+		t.equal(rows[0].uri, '^bu$');
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('DELETE invalid bodies', function (t) {
@@ -335,18 +297,14 @@ test('DELETE invalid bodies', function (t) {
 	});
 });
 
-test('GET roles rights', function (t) {
+test('GET roles rights', async function (t) {
 	const tasks = [];
 
 	// Empty database
-	tasks.push(function (cb) {
-		db.query('DELETE FROM user_roles_rights', cb);
-	});
+	await fixture.db.query('DELETE FROM user_roles_rights');
 
 	// Add a a few roles
-	tasks.push(function (cb) {
-		db.query('INSERT INTO user_roles_rights VALUES(\'aaa\',\'^bu$\'),(\'aaa\',\'^leffe$\'),(\'bbb\',\'^skev$\')', cb);
-	});
+	await fixture.db.query('INSERT INTO user_roles_rights VALUES(\'aaa\',\'^bu$\'),(\'aaa\',\'^leffe$\'),(\'bbb\',\'^skev$\')');
 
 	// Run REST query
 	tasks.push(function (cb) {
@@ -365,10 +323,7 @@ test('GET roles rights', function (t) {
 		});
 	});
 
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+	await async.series(tasks);
 });
 
 test('Invalid method', function (t) {

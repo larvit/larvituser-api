@@ -1,8 +1,6 @@
 'use strict';
-const async = require('async');
 
-exports = module.exports = function (req, res, cb) {
-	const tasks = [];
+exports = module.exports = async function (req, res, cb) {
 	const topLogPrefix = req.log.appLogPrefix + __filename + ' - ';
 
 	if (req.method.toUpperCase() !== 'POST') {
@@ -25,30 +23,24 @@ exports = module.exports = function (req, res, cb) {
 
 	req.log.verbose(topLogPrefix + 'Got request for login for user "' + req.jsonBody.username + '"');
 
-	tasks.push(function (cb) {
-		req.userLib.fromUserAndPass(req.jsonBody.username, req.jsonBody.password, function (err, user) {
-			if (err) return cb(err);
+	try {
+		const user = await req.userLib.fromUserAndPass(req.jsonBody.username, req.jsonBody.password);
 
-			if (!user) {
-				req.log.verbose(topLogPrefix + 'Log in failed for usern "' + req.jsonBody.username + '"');
-				res.data = false;
+		if (!user) {
+			req.log.verbose(topLogPrefix + 'Log in failed for usern "' + req.jsonBody.username + '"');
+			res.data = false;
+		} else {
+			req.log.verbose(topLogPrefix + 'User "' + req.jsonBody.username + '" successfully logged in');
+			res.data = {
+				fields: user.fields,
+				uuid: user.uuid,
+				username: user.username,
+				passwordIsFalse: user.passwordIsFalse
+			};
+		}
 
-				return cb();
-			} else {
-				req.log.verbose(topLogPrefix + 'User "' + req.jsonBody.username + '" successfully logged in');
-				res.data = {
-					fields: user.fields,
-					uuid: user.uuid,
-					username: user.username,
-					passwordIsFalse: user.passwordIsFalse
-				};
-
-				return cb();
-			}
-		});
-	});
-
-	async.parallel(tasks, function (err) {
-		cb(err, req, res);
-	});
+		return cb(null, req, res);
+	} catch (err) {
+		return cb(err, req, res);
+	}
 };

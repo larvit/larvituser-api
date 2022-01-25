@@ -1,24 +1,15 @@
 'use strict';
 
 const UserApi = require(__dirname + '/../index.js');
-const UserLib = require('larvituser');
+const {UserLib} = require('larvituser');
 const request = require('request');
 const uuidv4 = require('uuid/v4');
 const async = require('async');
 const test = require('tape');
 
 
-test('Create user to login with', function (t) {
-	const tasks = [];
-
-	tasks.push(function (cb) {
-		UserLib.instance.create('user-login', 'skärböna', { firstName: 'Svempa', lastname: 'Svampsson'}, uuidv4(), cb);
-	});
-
-	async.series(tasks, function (err) {
-		if (err) throw err;
-		t.end();
-	});
+test('Create user to login with', async function () {
+	await UserLib.instance.create('user-login', 'skärböna', { firstName: 'Svempa', lastname: 'Svampsson'}, uuidv4());
 });
 
 test('Successful login', function (t) {
