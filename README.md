@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.org/larvit/larvituser-api.svg)](https://travis-ci.org/larvit/larvituser-api) [![Dependencies](https://david-dm.org/larvit/larvituser-api.svg)](https://david-dm.org/larvit/larvituser-api.svg)
-[![Coverage Status](https://coveralls.io/repos/larvit/larvituser-api/badge.svg)](https://coveralls.io/github/larvit/larvituser-api)
+[![Build Status](https://github.com/larvit/larvituser-api/actions/workflows/ci.yml/badge.svg)](https://github.com/larvit/larvituser-api/actions)
 
 # larvituser-api
 
