@@ -18,7 +18,7 @@
   "dependencies": {
     "async": "3.2.4",
     "larvitbase-api": "0.5.6",
-    "larvituser": "0.20.32",
+    "larvituser": "0.20.36",
     "larvitutils": "5.1.17"
   },
   "devDependencies": {
