@@ -1,6 +1,6 @@
 {
   "name": "larvituser-api",
-  "version": "0.7.29",
+  "version": "0.7.30",
   "description": "REST api built on top of larvituser",
   "author": {
     "name": "Klas Espenkrona",
@@ -18,17 +18,17 @@
   "dependencies": {
     "async": "3.2.4",
     "larvitbase-api": "0.5.6",
-    "larvituser": "0.20.41",
+    "larvituser": "0.20.42",
     "larvitutils": "5.1.21"
   },
   "devDependencies": {
     "coveralls": "3.1.1",
-    "eslint": "8.31.0",
+    "eslint": "8.32.0",
     "freeport": "1.0.5",
     "istanbul": "0.4.5",
-    "larvitdb": "3.2.31",
+    "larvitdb": "3.2.33",
     "request": "2.88.2",
-    "tape": "5.6.1"
+    "tape": "5.6.3"
   },
   "keywords": [
     "user",
